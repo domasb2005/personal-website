@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Grotesk';
+  src: url('/fonts/fonts-NG-SB.woff2') format('woff2'),
+       url('/fonts/fonts-NG-SB.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+}
+
+:root {
+    --color-grid: #00f;
+    --color-black: #242424;
+    --color-white: #fff;
+    --color-blue: #00f;
+    --size: 390;
+    --padding-container: 2rem;
+    --margin-block: 2.5rem;
+}
+
+@media (min-width: 768px) {
+    :root {
+        --size: 768;
+        --margin-block: 10rem;
+        --padding-container: 2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --size: 1024;
+    }
+}
+
+@media (min-width: 1200px) {
+    :root {
+        --size: 1440;
+    }
+}
+
+html {
+    font-size: calc((100vw / var(--size)) * 10);
+    overflow-x: hidden;
+}
+
+@layer components {
+  .small-text {
+    @apply text-[var(--color-black)] text-[1.3rem] font-['Grotesk'] leading-[1.6rem];
+  }
+}
