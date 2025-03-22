@@ -11,7 +11,6 @@ export default function Home() {
   const container = useRef(null);
   const image = useRef();
 
-
   useGSAP( () => {
     const targets = gsap.utils.toArray(["div"])
     // Entry animation
@@ -29,11 +28,10 @@ export default function Home() {
     <div ref={container} className="fixed top-0">
       <div id="fixed" className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
         {[...Array(16)].map((_, index) => (
-      //bg-blue-500    
-      <div key={index} className="h-full">
+          <div key={index} className="h-full bg-blue-500">
             <div className="md:hidden h-full">
               {index === 15 && (
-                <div id="h2-wrap"  className="whitespace-nowrap absolute bottom-0 right-0">
+                <div id="h2-wrap" className="whitespace-nowrap absolute bottom-0 right-0">
                   {['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'].map((name, i) => (
                     <h2 key={i} className="small-text block text-right">{name}</h2>
                   ))}
