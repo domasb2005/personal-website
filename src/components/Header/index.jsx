@@ -7,14 +7,26 @@ export default function Index() {
       {[...Array(16)].map((_, index) => (
         <div key={index} className="h-full">
           <div className="md:hidden">
-            {index === 11 && <Link scroll={false} className='small-text' href="/">Works,</Link>}
-            {index === 13 && <Link scroll={false} className='small-text' href="/about">About</Link>}
+            {index === 15 && (
+              <span className='whitespace-nowrap right-[2rem] absolute'>
+                <Link scroll={false} className='small-text' href="/">Works,</Link>
+                {' '}
+                <Link scroll={false} className='small-text' href="/about">About</Link>
+              </span>
+            )}
             {index === 0 && <h1 className='small-text whitespace-nowrap'>Domas Berulis</h1>}
           </div>
           <div className="hidden md:block">
-            {index === 0 && <Link scroll={false} className='small-text' href="/">Works,</Link>}
-            {index === 1 && <Link scroll={false} className='small-text' href="/about">About</Link>}
-            {index === 5 && <h1 className='small-text bottom-[2rem] absolute'>Domas Berulis</h1>}
+            {index === 5 && (
+              <>
+                <span className='whitespace-nowrap'>
+                  <Link scroll={false} className='small-text' href="/">Works,</Link>
+                  {' '}
+                  <Link scroll={false} className='small-text' href="/about">About</Link>
+                </span>
+                <h1 className='small-text bottom-[2rem] absolute'>Domas Berulis</h1>
+              </>
+            )}
           </div>
         </div>
       ))}

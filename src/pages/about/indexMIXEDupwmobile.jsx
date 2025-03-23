@@ -7,7 +7,9 @@ export default function Index() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
   const image = useRef();
-  const projectRefs = useRef([]);
+  // Separate desktop and mobile refs
+  const desktopProjectRefs = useRef([]);
+  const mobileProjectRefs = useRef([]);
   const paragraphLineRefs = useRef([]);
   const paragraphRef = useRef(null);
   const redParagraphRef = useRef(null);
@@ -167,7 +169,26 @@ export default function Index() {
         const text = paragraphRef.current?.textContent || "";
         const visibleParagraph = paragraphRef.current;
 
-        const h2Positions = projectRefs.current.map(h2 => {
+        const isMobile = window.innerWidth < 768;
+
+        // Completely separate mobile and desktop logic
+        if (isMobile) {
+          const mobileH2Wrap = container.current.querySelector('#h2-wrap');
+          const mobileH2s = Array.from(mobileH2Wrap?.querySelectorAll('h2') || []);
+          mobileProjectRefs.current = mobileH2s;
+          
+          console.log('Mobile H2s found:', mobileH2s.length);
+          const validH2s = mobileProjectRefs.current.filter(Boolean);
+        } else {
+          // Desktop logic uses desktopProjectRefs
+          const validH2s = desktopProjectRefs.current.filter(Boolean);
+        }
+
+        // Use the appropriate refs based on viewport
+        const activeProjectRefs = isMobile ? mobileProjectRefs.current : desktopProjectRefs.current;
+        const validH2s = activeProjectRefs.filter(Boolean);
+
+        const h2Positions = validH2s.map(h2 => {
           const rect = h2.getBoundingClientRect();
           return {
             element: h2,
@@ -226,6 +247,22 @@ export default function Index() {
 
           const translateX = placeholderRect.left - h2Rect.left;
           const translateY = (placeholderRect.top - h2Info.originalTop) - lineHeight;
+          
+          // Debug print for animation values
+          console.log(`Animation values for ${h2Info.element.textContent}:`, {
+            translateX,
+            translateY,
+            placeholderRect: {
+              top: placeholderRect.top,
+              left: placeholderRect.left
+            },
+            h2Original: {
+              top: h2Info.originalTop,
+              left: h2Info.originalLeft
+            },
+            lineHeight
+          });
+
           gsap.to(h2Info.element, {
             x: translateX + (index === 0 ? 0 : 5),
             y: translateY,
@@ -248,36 +285,137 @@ export default function Index() {
             ease: "power4.out",
             stagger: 0.1
           })
-          .to(projectRefs.current, {
+          .to(activeProjectRefs, {
             x: 0,
             y: 0,
             duration: ANIMATION_DURATION.short,
             ease: "power2.inOut",
             stagger: 0.1
-          }, "<"); // The "<" position parameter makes this animation start at the same time as the previous one
-
-        // Add the exit timeline to the main timeline
-        timeline.add(exitTimeline, 0);
+          }, "<");
 
       });
     });
   }, { scope: container });
 
   return (
-    <div ref={container} className="fixed top-0">
-      <div id="fixed" className="h-[100dvh] w-[100dvw] fixed top-0 pt-[11rem] md:pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+    <div ref={container} className="md:fixed top-0">
+      <div id="fixed" className="h-[100dvh] w-[100dvw] md:fixed top-0 pt-[11rem] md:pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
         {[...Array(16)].map((_, index) => (
           //bg-blue-500
           <div key={index} className="h-full">
             <div className="md:hidden h-full">
-              
+              {index === 0 && (
+                <>
+                  <div id="bio-wrap" className="absolute left-[2rem] right-[2rem]">
+                    <h2 className="small-text uppercase opacity-[0.32]">
+                      Bio
+                    </h2>
+                    <p className="small-text pt-[1rem]">
+                      I used to work as an embedded systems developer with a strong electrical engineering background. Studying at the Technical University Eindhoven. Currently learning web and mobile app development.
+                    </p>
+                  </div>
+                  <div id='p-wrap-mobile' className='absolute left-[2rem] pt-[15rem] right-[2rem]'>
+                    <h2 className="small-text uppercase opacity-[0.32]">
+                      Projects i'm not ashamed of
+                    </h2>
+                    <div id="p-wrap" ref={paragraphRef} style={{ whiteSpace: 'pre-wrap', width: 'calc(100dvh-2rem)' }} className="small-text pt-[1rem]">
+                      <p className="overflow-visible">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[0] = el}>
+                          {"          "} is a website for math tutoring services.
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[1] = el}>
+                          It's my first-ever website, made with WordPress.
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[2] = el}>
+                          {"               "} served as a landing page for a hackathon
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[3] = el}>
+                          startup project. Created within six hours, it was also
+                        </span>
+                      </p>
+                      <p className='overflow-hidden'>
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[4] = el}>
+                          built with WordPress due to the need for a quick launch.
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[5] = el}>
+                          {"           "} is an Android app that leverages AI to
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[6] = el}>
+                          generate calendar events from selected text, made
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[7] = el}>
+                          with Kotlin and Jetpack Compose. The nuclear control
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[8] = el}>
+                          room {"             "} is an interactive installation at the
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[9] = el}>
+                          Energy and Technology Museum, my first workplace as
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[10] = el}>
+                          an embedded systems developer. The {"           "} is a
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[11] = el}>
+                          device showcasing electromagnetic induction, a hobby
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[12] = el}>
+                          project for the "Upcycling 2023" contest. The
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[13] = el}>
+                          {"          "} is another museum installation featuring
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[14] = el}>
+                          remote-controlled cars with a first-person view and a
+                        </span>
+                      </p>
+                      <p className="overflow-hidden">
+                        <span className="inline-block" ref={el => paragraphLineRefs.current[15] = el}>
+                          real-time control system.
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div id="h2-wrap" className="whitespace-nowrap absolute bottom-[2rem] right-[2rem]">
+                  {['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'].map((name, i) => (
+                    <h2 key={i} className="small-text block text-right">{name}</h2>
+                  ))}
+                </div>
+
+                </>
+              )}
             </div>
             <div className="hidden md:block">
               {index === 5 && (
                 <>
                   <div id="h2-wrap" className="whitespace-nowrap text-left relative">
                     {['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'].map((name, i) => (
-                      <h2 key={i} ref={el => projectRefs.current[i] = el}
+                      <h2 key={i} ref={el => desktopProjectRefs.current[i] = el}
                         className="small-text ">{name}</h2>
                     ))}
                   </div>
