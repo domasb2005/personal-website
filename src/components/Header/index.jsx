@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 export default function Index() {
   return (
-    <div id="fixed" className="h-[100dvh] w-[100dvw] fixed top-0 p-[2rem] grid auto-cols-fr gap-4 z-[10]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+    <div id="fixed" className="w-[100dvw] fixed top-0 p-[2rem] grid auto-cols-fr gap-4 z-[10]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
       {[...Array(16)].map((_, index) => (
-        <div key={index} className="h-full">
+        <div key={index} className="relative">
           <div className="md:hidden">
             {index === 15 && (
               <span className='whitespace-nowrap right-[2rem] absolute'>
@@ -24,7 +24,7 @@ export default function Index() {
                   {' '}
                   <Link scroll={false} className='small-text' href="/about">About</Link>
                 </span>
-                <h1 className='small-text bottom-[2rem] absolute'>Domas Berulis</h1>
+                <h1 className='small-text fixed bottom-[2rem]'>Domas Berulis</h1>
               </>
             )}
           </div>
