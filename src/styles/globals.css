@@ -50,3 +50,9 @@ html {
     @apply text-[var(--color-black)] text-[1.3rem] font-['Grotesk'] leading-[1.6rem];
   }
 }
+
+.invisible-placeholder {
+    opacity: 0;
+    visibility: visible;
+    display: inline-block;
+  }
