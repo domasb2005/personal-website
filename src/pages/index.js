@@ -116,53 +116,46 @@ export default function Home() {
   return (
     <>
       <div ref={container} className="fixed top-0">
-        <div
-          className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
-          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
-        >
-          {[...Array(16)].map((_, index) => (
-            <div key={index} className="h-full bg-blue-500 relative">
-              {/* Mobile project names */}
-              <div className="md:hidden h-full">
-                {index === 15 && (
-                  <div className="whitespace-nowrap absolute bottom-0 right-0">
-                    {PROJECT_NAMES.map((name, i) => (
-                      <h2
-                        key={i}
-                        className={`small-text !leading-[2.5rem] block text-right transition-opacity duration-200 ${
-                          activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                        }`}
-                        onMouseEnter={() => setHoveredIndex(i)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                      >
-                        {name}
-                      </h2>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Desktop project names */}
-              <div className="hidden md:block">
-                {index === 5 && (
-                  <div className="whitespace-nowrap text-left">
-                    {PROJECT_NAMES.map((name, i) => (
-                      <h2
-                        key={i}
-                        className={`small-text !leading-[1.8rem] transition-opacity duration-200 ${
-                          activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                        }`}
-                        onMouseEnter={() => setHoveredIndex(i)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                      >
-                        {name}
-                      </h2>
-                    ))}
-                  </div>
-                )}
-              </div>
+        <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
+          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+          
+          {/* Mobile project names */}
+          <div className="md:hidden h-full relative"
+            style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
+            <div className="whitespace-nowrap absolute bottom-0 right-0">
+              {PROJECT_NAMES.map((name, i) => (
+                <h2
+                  key={i}
+                  className={`small-text !leading-[2.5rem] block text-right transition-opacity duration-200 ${
+                    activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                  }`}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  {name}
+                </h2>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Desktop project names */}
+          <div className="hidden md:block"
+            style={{ gridColumnStart: 6, gridColumnEnd: 7 }}>
+            <div className="whitespace-nowrap text-left">
+              {PROJECT_NAMES.map((name, i) => (
+                <h2
+                  key={i}
+                  className={`small-text !leading-[1.8rem] transition-opacity duration-200 ${
+                    activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                  }`}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  {name}
+                </h2>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
