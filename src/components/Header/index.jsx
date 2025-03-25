@@ -9,7 +9,7 @@ export default function Index() {
           <div className="md:hidden">
             {index === 15 && (
               <span className='whitespace-nowrap right-[2rem] absolute'>
-                <Link scroll={false} className='small-text' href="/">Works,</Link>
+                <Link scroll={false} className='small-text' href="/">Work,</Link>
                 {' '}
                 <Link scroll={false} className='small-text' href="/about">About</Link>
               </span>
@@ -20,7 +20,7 @@ export default function Index() {
             {index === 5 && (
               <>
                 <span className='whitespace-nowrap'>
-                  <Link scroll={false} className='small-text' href="/">Works,</Link>
+                  <Link scroll={false} className='small-text' href="/">Work,</Link>
                   {' '}
                   <Link scroll={false} className='small-text' href="/about">About</Link>
                 </span>

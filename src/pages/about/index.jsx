@@ -5,6 +5,8 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
 
+
+
 export default function Index() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
@@ -16,6 +18,43 @@ export default function Index() {
   const mobileParagraphRef = useRef(null);
   const slidingChildren = useRef(null);
 
+
+  const playExitAnimation = () => {
+    const timeline = gsap.timeline();
+  
+    const paragraphLines = container.current?.querySelectorAll('p > span') || [];
+    const slidingChildren = container.current?.querySelectorAll('.slidingChildren > *') || [];
+    const allH2s = [...projectRefs.current, ...mobileProjectRefs.current].filter(Boolean);
+  
+    // Animate paragraph lines
+    timeline.to(paragraphLines, {
+      y: '-100%',
+      opacity: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power4.in',
+      stagger: 0.02,
+    }, 0);
+  
+    // Animate sliding children
+    timeline.to(slidingChildren, {
+      y: '-100%',
+      opacity: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power4.in',
+      stagger: 0.015,
+    }, 0);
+  
+    // Animate H2s back
+    timeline.to(allH2s, {
+      x: 0,
+      y: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power2.inOut',
+      stagger: ANIMATION_DURATION.short/allH2s.length,
+    }, 0.1);
+  
+    return timeline;
+  };
 
   const projectNames = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'];
 
@@ -206,55 +245,23 @@ export default function Index() {
     );
   };
 
-  const exitAnimations = () => {
-    // Animate paragraph lines up
-    const lines = Array.from(document.querySelectorAll('p > span'));
-    timeline.to(lines, {
-      y: '-100%',
-      opacity: 0,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power4.in',
-      stagger: ANIMATION_DURATION.short / lines.length
-    });
-
-    // Animate sliding children up
-    const slidingElements = document.querySelectorAll('.slidingChildren > *');
-    timeline.to(slidingElements, {
-      y: '-100%',
-      opacity: 0,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power4.in',
-      stagger: ANIMATION_DURATION.short / slidingElements.length
-    }, '<');
-
-    // Animate H2s back to original positions
-    const h2s = [...projectRefs.current, ...mobileProjectRefs.current];
-    timeline.to(h2s, {
-      x: 0,
-      y: 0,
-      duration: ANIMATION_DURATION.long,
-      ease: 'power2.in',
-      stagger: ANIMATION_DURATION.long / h2s.length,
-    }, '<');
-  };
-
   useGSAP(() => {
-    // Entry animations
     requestAnimationFrame(() => {
       setupParagraph(paragraphRef.current, originalText);
       animateParagraphLines(paragraphRef.current);
       animateH2s(paragraphRef.current, projectRefs.current);
       animateSlidingChildren();
-
+  
       setupParagraph(mobileParagraphRef.current, originalText);
       animateParagraphLines(mobileParagraphRef.current);
       animateH2s(mobileParagraphRef.current, mobileProjectRefs.current);
+  
+      // ✅ Add exit animation to the transition timeline
+      if (timeline) {
+        timeline.add(playExitAnimation(), 'exit');
+      }
     });
-
-    // Setup exit animations
-    timeline.add(exitAnimations);
   }, { scope: container });
-
   return (
     <div ref={container} className="fixed top-0">
       <div id="fixed" className="h-[100dvh] w-[100dvw] fixed top-0 pt-[11rem] md:pt-[calc(45dvh-2.6rem)] p-[2rem]">
@@ -284,7 +291,7 @@ export default function Index() {
           </div>
           <div className="whitespace-nowrap text-left absolute bottom-[2rem] right-[2rem]">
             {projectNames.map((name, i) => (
-              <h2 key={i} ref={el => mobileProjectRefs.current[i] = el} className="small-text">
+              <h2 key={i} ref={el => mobileProjectRefs.current[i] = el} className="!leading-[2.5rem] small-text">
                 {name}
               </h2>
             ))}
