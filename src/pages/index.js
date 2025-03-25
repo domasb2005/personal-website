@@ -1,8 +1,13 @@
+'use client';
+
 import { useContext, useRef, useEffect, useState } from 'react';
 import { TransitionContext } from '@/context/TransitionContext';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import Image from 'next/image';
+import Lenis from '@studio-freight/lenis';
+import { ANIMATION_DURATION } from '@/constants/animation';
+
 
 const PROJECT_COUNT = 6;
 const PROJECT_FOLDERS = {
@@ -19,19 +24,30 @@ const PROJECT_NAMES = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA CO
 export default function Home() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
+  const sectionRefs = useRef([]);
+  const lenisRef = useRef(null);
 
   const [fileTypes, setFileTypes] = useState({});
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  // Detect file types for each item (video or image)
+  useEffect(() => {
+    lenisRef.current = new Lenis();
+    function raf(time) {
+      lenisRef.current.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => lenisRef.current?.destroy();
+  }, []);
+
   useEffect(() => {
     const types = {};
     Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
       for (let i = 0; i < count; i++) {
         const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
         const key = `${projectIndex}-${i}`;
-
         fetch(videoUrl, { method: 'HEAD' })
           .then(res => {
             types[key] = res.ok ? 'video' : 'image';
@@ -45,26 +61,84 @@ export default function Home() {
     });
   }, []);
 
-  // Track scroll to determine active project
   useEffect(() => {
     const handleScroll = () => {
-    const projectElements = Array.from(document.querySelectorAll('.projectMedia'))
-      .filter(el => el.offsetParent !== null); // filters out display: none elements
+      const projectElements = Array.from(document.querySelectorAll('.projectMedia'))
+        .filter(el => el.offsetParent !== null);
       const middleY = window.innerHeight * 0.45;
 
       projectElements.forEach((el, index) => {
         const rect = el.getBoundingClientRect();
         if (rect.top <= middleY && rect.bottom >= middleY) {
           setActiveProjectIndex(index);
-          console.log('Active Project Index:', index); // Added logging
         }
       });
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const scrollToProject = (index) => {
+    const el = sectionRefs.current[index];
+    if (el && lenisRef.current) {
+      const rect = el.getBoundingClientRect();
+      const scrollY = window.scrollY + rect.top - window.innerHeight * 0.449;
+      lenisRef.current.scrollTo(scrollY, { duration: 1.2 });
+    }
+  };
+
+  // Add these state variables after the existing useState declarations
+  const [loadedAssets, setLoadedAssets] = useState(0);
+  const [totalAssets, setTotalAssets] = useState(0);
+
+  // Modify the useEffect that handles file types
+  useEffect(() => {
+    const types = {};
+    let total = 0;
+    let loaded = 0;
+
+    // Calculate total assets
+    Object.entries(PROJECT_FOLDERS).forEach(([_, count]) => {
+      total += count;
+    });
+    setTotalAssets(total);
+
+    // Check each asset
+    Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
+      for (let i = 0; i < count; i++) {
+        const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
+        const imageUrl = `/images/folder_${projectIndex}/${i}.webp`;
+        const key = `${projectIndex}-${i}`;
+
+        fetch(videoUrl, { method: 'HEAD' })
+          .then(res => {
+            types[key] = res.ok ? 'video' : 'image';
+            setFileTypes(prev => ({ ...prev, [key]: types[key] }));
+            loaded++;
+            setLoadedAssets(loaded);
+            console.log(`Loading progress: ${loaded}/${total} assets`);
+          })
+          .catch(() => {
+            types[key] = 'image';
+            setFileTypes(prev => ({ ...prev, [key]: 'image' }));
+            loaded++;
+            setLoadedAssets(loaded);
+            console.log(`Loading progress: ${loaded}/${total} assets`);
+          });
+      }
+    });
+  }, []);
+
+  // Add this after the imports to track individual media loading
+  const onMediaLoad = () => {
+    setLoadedAssets(prev => {
+      const newCount = prev + 1;
+      console.log(`Media loaded: ${newCount}/${totalAssets}`);
+      return newCount;
+    });
+  };
+
+  // Modify the getMediaType function to add onLoad handlers
   const getMediaType = (index, i) => {
     const key = `${index}-${i}`;
     const type = fileTypes[key];
@@ -76,12 +150,13 @@ export default function Home() {
     return type === 'video' ? (
       <video
         key={`v-${index}-${i}`}
-        className="w-full object-contain"
+        className="w-full object-contain photo"
         style={{ height: 'auto' }}
         autoPlay
         loop
         muted
         playsInline
+        onLoadedData={onMediaLoad}
       >
         <source src={videoPath} type="video/mp4" />
       </video>
@@ -92,26 +167,47 @@ export default function Home() {
         alt={`Image ${i} from project ${index}`}
         width={1920}
         height={1080}
-        className="w-full object-contain"
+        className="w-full object-contain photo"
         style={{ height: 'auto' }}
+        onLoad={onMediaLoad}
       />
     );
   };
 
   useGSAP(() => {
-    const targets = gsap.utils.toArray(['div']);
-    gsap.fromTo(
-      targets,
-      { y: -30, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.05 }
-    );
-    timeline.add(
-      gsap.to(targets, {
-        y: 30,
-        opacity: 0,
-      })
-    );
-  }, { scope: container });
+  
+    setTimeout(() => {
+      const mediaItems = gsap.utils.toArray('.photo');
+      console.log('⏱️ Media items after delay:', mediaItems);
+  
+      if (!mediaItems.length) {
+        console.warn('🚫 No media items found even after delay');
+        return;
+      }
+  
+      // Entry animation – slide in from below
+      gsap.fromTo(
+        mediaItems,
+        { y: '100vh', opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: ANIMATION_DURATION.xlong,  // Changed from 1 to short duration
+          ease: 'power2.out',
+          stagger: 0.03
+        }
+      );
+  
+      // Exit animation – fade out
+      timeline.add(
+        gsap.to(mediaItems, {
+          opacity: 0,
+          duration: ANIMATION_DURATION.short,  // Changed from 0.8 to short duration
+          ease: 'power1.out'
+        })
+      );
+    }, 1000); 
+  }, { scope: container });  
 
   return (
     <>
@@ -141,6 +237,8 @@ export default function Home() {
                     }`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
+                    onClick={() => scrollToProject(i)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {name}
                   </h2>
@@ -162,6 +260,8 @@ export default function Home() {
                     }`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
+                    onClick={() => scrollToProject(i)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {name}
                   </h2>
@@ -191,6 +291,7 @@ export default function Home() {
           {[...Array(PROJECT_COUNT)].map((_, index) => (
             <div
               key={index}
+              ref={el => sectionRefs.current[index] = el}
               className="bg-red-500 h-full projectMedia flex flex-col gap-4"
               style={{ gridColumn: '1 / 12' }}
             >
@@ -211,6 +312,7 @@ export default function Home() {
   {[...Array(PROJECT_COUNT)].map((_, index) => (
     <div
       key={index}
+      ref={el => sectionRefs.current[index] = el}
       className="projectMedia bg-red-500 h-auto grid gap-4"
       style={{
         gridColumn: '1 / 5',
