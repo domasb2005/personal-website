@@ -122,38 +122,60 @@ export default function Home() {
           {/* Mobile project names */}
           <div className="md:hidden h-full relative"
             style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
-            <div className="whitespace-nowrap absolute bottom-0 right-0">
-              {PROJECT_NAMES.map((name, i) => (
-                <h2
-                  key={i}
-                  className={`small-text !leading-[2.5rem] block text-right transition-opacity duration-200 ${
-                    activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                  }`}
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {name}
-                </h2>
-              ))}
+            <div className="whitespace-nowrap absolute bottom-0 right-0 flex justify-end gap-4">
+              <div
+                className="w-3 h-3 mt-3"
+                style={{
+                  backgroundColor: 'var(--color-black)',
+                  clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)',
+                  transform: `translateY(calc(${activeProjectIndex} * 2.5rem))`,
+                  transition: 'transform 0.2s ease-out'
+                }}
+              />
+              <div>
+                {PROJECT_NAMES.map((name, i) => (
+                  <h2
+                    key={i}
+                    className={`small-text !leading-[2.5rem] block text-right ${
+                      activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                    }`}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  >
+                    {name}
+                  </h2>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Desktop project names */}
           <div className="hidden md:block"
-            style={{ gridColumnStart: 6, gridColumnEnd: 7 }}>
-            <div className="whitespace-nowrap text-left">
-              {PROJECT_NAMES.map((name, i) => (
-                <h2
-                  key={i}
-                  className={`small-text !leading-[1.8rem] transition-opacity duration-200 ${
-                    activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                  }`}
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                  {name}
-                </h2>
-              ))}
+            style={{ gridColumnStart: 6, gridColumnEnd: 8 }}>
+            <div className="whitespace-nowrap flex justify-between">
+              <div className="text-left">
+                {PROJECT_NAMES.map((name, i) => (
+                  <h2
+                    key={i}
+                    className={`small-text !leading-[1.8rem] ${
+                      activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                    }`}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  >
+                    {name}
+                  </h2>
+                ))}
+              </div>
+              <div
+                className="w-3 h-3 ml-8 mt-2"
+                style={{
+                  backgroundColor: 'var(--color-black)',
+                  clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
+                  transform: `translateY(calc(${activeProjectIndex} * 1.8rem))`,
+                  transition: 'transform 0.2s ease-out'
+                }}
+              />
             </div>
           </div>
         </div>
