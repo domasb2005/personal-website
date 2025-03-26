@@ -217,7 +217,7 @@ export default function Home() {
             style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
             <div className="whitespace-nowrap absolute bottom-0 right-0 flex justify-end gap-4">
               <div
-                className="w-3 h-3 mt-3"
+                className="w-3 h-3 mt-1.5"
                 style={{
                   backgroundColor: 'var(--color-black)',
                   clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)',
@@ -265,7 +265,7 @@ export default function Home() {
                 ))}
               </div>
               <div
-                className="w-3 h-3 ml-8 mt-2"
+                className="w-3 h-3 ml-8 mt-1"
                 style={{
                   backgroundColor: 'var(--color-black)',
                   clipPath: 'polygon(0% 50%, 100% 0%, 100% 100%)',
