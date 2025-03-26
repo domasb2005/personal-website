@@ -23,12 +23,10 @@ export default function LoadingScreen({ onLoadComplete }) {
       return new Promise((resolve) => {
         const img = new Image();
         img.src = url;
-        // Set high resolution
         img.width = 1280;
         img.height = 720;
         
         img.onload = () => {
-          // Force browser to keep in memory
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           canvas.width = img.width;
@@ -67,8 +65,8 @@ export default function LoadingScreen({ onLoadComplete }) {
 
       Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
         for (let i = 0; i < count; i++) {
-          const imageUrl = `/images/folder_${projectIndex}/${i}.webp`;
-          const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
+          const imageUrl = `/images/folder_${projectIndex}/${i}-min.jpg`;
+          const videoUrl = `/images/folder_${projectIndex}/${i}-min.mp4`;
 
           promises.push(
             preloadImage(imageUrl).then((dataUrl) => {
@@ -90,7 +88,6 @@ export default function LoadingScreen({ onLoadComplete }) {
       });
 
       await Promise.all(promises);
-      // Store cache in window for global access
       window.__assetCache = cache;
       onLoadComplete();
     };

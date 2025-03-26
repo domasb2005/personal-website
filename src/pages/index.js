@@ -20,6 +20,23 @@ const PROJECT_FOLDERS = {
 };
 
 const PROJECT_NAMES = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'];
+const PROJECT_DESCRIPTIONS = [
+  "A landing page for tutoring maths.",
+  "A landing page for a hackhaton startup.",
+  "An Android app that uses AI to generate events in your calendar from selected text.",
+  "An interactive nuclear power plant control room simulator for the Energy and Technology Museum. My work involved programming microcontrollers, wiring them with buttons, switches, display modules, and motors, and integrating everything into a Debian system.",
+  "A Tesla coil designed to be harmless to touch, low-noise, and long-lasting for the Energy and Technology Museum. It features a dual-resonant solid-state design and was fine-tuned by hand.",
+  "A racing minigame for the Energy and Technology Museum using remote-controlled cars and a first-person video feed. Built with custom circuit boards and real-time control over wifi."
+];
+
+const PROJECT_LINKS = [
+  "https://example.com/algebra",
+  "https://example.com/urbanear",
+  "https://github.com/domasb2005/eventAI",
+  null,
+  null,
+  null
+];
 
 export default function Home() {
   const { timeline } = useContext(TransitionContext);
@@ -31,9 +48,10 @@ export default function Home() {
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [previewImage, setPreviewImage] = useState({
-    src: '/images/folder_0/0.webp',
+    src: '/images/folder_0/0-min.jpg',
     type: 'image'
   });
+  const [descriptionIndex, setDescriptionIndex] = useState(0);
 
   useEffect(() => {
     lenisRef.current = new Lenis();
@@ -55,32 +73,33 @@ export default function Home() {
         const rect = el.getBoundingClientRect();
         if (rect.top <= middleY && rect.bottom >= middleY) {
           setActiveProjectIndex(index);
-          
+          setDescriptionIndex(index);
+
           // Get all media elements in the current project section
           const mediaElements = el.querySelectorAll('img, video');
-          
+
           // Find the media element that most recently crossed the middle line
           let recentlyCrossedMedia = null;
           let smallestDistance = Infinity;
-          
+
           mediaElements.forEach(media => {
             const mediaRect = media.getBoundingClientRect();
             const distanceFromMiddle = Math.abs(mediaRect.top - middleY);
-            
+
             if (mediaRect.top <= middleY && distanceFromMiddle < smallestDistance) {
               smallestDistance = distanceFromMiddle;
               recentlyCrossedMedia = media;
             }
           });
-          
+
           if (recentlyCrossedMedia) {
             const isVideo = recentlyCrossedMedia.tagName.toLowerCase() === 'video';
             const mediaIndex = Array.from(mediaElements).indexOf(recentlyCrossedMedia);
-            
+
             setPreviewImage({
-              src: isVideo ? 
-                `/images/folder_${index}/${mediaIndex}.mp4` : 
-                `/images/folder_${index}/${mediaIndex}.webp`,
+              src: isVideo ?
+                `/images/folder_${index}/${mediaIndex}-min.mp4` :
+                `/images/folder_${index}/${mediaIndex}-min.jpg`,
               type: isVideo ? 'video' : 'image'
             });
           }
@@ -186,18 +205,18 @@ export default function Home() {
 
   // The function is named getMediaElement
   const getMediaElement = (index, i) => {
-    const imagePath = `/images/folder_${index}/${i}.webp`;
-    const videoPath = `/images/folder_${index}/${i}.mp4`;
+    const imagePath = `/images/folder_${index}/${i}-min.jpg`;
+    const videoPath = `/images/folder_${index}/${i}-min.mp4`;
 
     return (
       <Image
         key={`img-${index}-${i}`}
         src={imagePath}
         alt={`Image ${i} from project ${index}`}
-        width={1920}
+        width={1280}
         priority={index === 0} // Only first image uses priority
         loading="eager"
-        height={1080}
+        height={720}
         className="w-full object-contain photo"
         style={{ height: 'auto' }}
         onLoad={onMediaLoad}
@@ -270,40 +289,6 @@ export default function Home() {
       <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50"
         style={{ transform: 'scaleY(0)' }}></div>
 
-      {/* New Desktop Preview Grid */}
-      <div className="hidden md:grid fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]"
-        style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-        <div className="bg-blue-500 h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
-          <div className="w-full h-full flex items-end justify-end">
-            {previewImage?.type === 'video' ? (
-              <video
-                src={previewImage.src}
-                className="h-full object-contain"
-                style={{
-                  maxWidth: '100%',
-                  objectPosition: 'right bottom',
-                }}
-                autoPlay
-                muted
-                loop
-                playsInline
-              />
-            ) : (
-              <Image
-                src={previewImage.src}
-                alt="Current preview"
-                width={1280}
-                height={720}
-                className="object-contain"
-                style={{
-                  width: 'auto',
-                  height: '100%',
-                  objectPosition: 'right bottom',
-                }}
-              />
-            )}
-          </div>
-        </div>      </div>
 
       <div ref={container} className="fixed top-0">
         <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
@@ -344,7 +329,7 @@ export default function Home() {
           <div className="hidden md:block"
             style={{ gridColumnStart: 6, gridColumnEnd: 8 }}>
             <div className="whitespace-nowrap flex justify-between">
-              <div className="text-left">
+              <div className="text-left z-[40]">
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
@@ -371,6 +356,71 @@ export default function Home() {
             </div>
           </div>
 
+        </div>
+      </div>
+      {/*preview*/}
+      <div className="hidden md:grid pointer-events-none fixed z-[0] top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]"
+        style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
+          <div className="w-full h-full flex items-end justify-end">
+            {previewImage?.type === 'video' ? (
+              <video
+                src={previewImage.src}
+                className="h-full object-contain"
+                style={{
+                  maxWidth: '100%',
+                  objectPosition: 'right bottom',
+                }}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <Image
+                src={previewImage.src}
+                alt="Current preview"
+                width={1280}
+                height={720}
+                className="object-contain"
+                style={{
+                  width: 'auto',
+                  height: '100%',
+                  objectPosition: 'right bottom',
+                }}
+              />
+            )}
+          </div>
+        </div>
+        <div className='small-text pointer-events-auto flex justify-between'
+          style={{ gridColumn: '9/ span 8' }}>
+          <span className='overflow-hidden'>
+            <p id='description'>{PROJECT_DESCRIPTIONS[descriptionIndex]}</p>
+          </span>
+
+          {PROJECT_LINKS[descriptionIndex] && (
+            <span className="overflow-hidden">
+  <a
+    href={PROJECT_LINKS[descriptionIndex]}
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" flex items-center group"
+  >
+    Visit
+    <span className="svg-wrapper ml-2 relative my-[1px] w-[10px] h-[10px] overflow-hidden inline-block">
+      <span className="block w-full transition-transform duration-500 ease-out delay-100 group-hover:translate-x-full group-hover:-translate-y-full group-hover:delay-0">
+        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
+        </svg>
+      </span>
+      <span className="absolute block top-0 left-0 w-full -translate-x-full translate-y-full transition-transform duration-500 ease-out group-hover:translate-x-0 group-hover:translate-y-0 group-hover:delay-100">
+        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
+        </svg>
+      </span>
+    </span>
+  </a>
+</span>          )}
         </div>
       </div>
 
@@ -423,7 +473,7 @@ export default function Home() {
               </div>
             </div>
           ))}
-          <div className='h-[50dvh]' style={{gridColumn: '1/5'}}></div>
+          <div className='h-[50dvh]' style={{ gridColumn: '1/5' }}></div>
 
 
         </div>
