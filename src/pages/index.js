@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useContext, useRef, useEffect, useState } from 'react';
 import { TransitionContext } from '@/context/TransitionContext';
 import { useGSAP } from '@gsap/react';
@@ -7,7 +8,6 @@ import gsap from 'gsap';
 import Image from 'next/image';
 import Lenis from '@studio-freight/lenis';
 import { ANIMATION_DURATION } from '@/constants/animation';
-
 
 const PROJECT_COUNT = 6;
 const PROJECT_FOLDERS = {
@@ -24,10 +24,10 @@ const PROJECT_NAMES = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA CO
 export default function Home() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
-  const sectionRefs = useRef([]);
+  const sectionRefs = useRef([]); // Keep this for desktop
+  const mobileSectionRefs = useRef([]); // Add this for mobile
   const lenisRef = useRef(null);
 
-  const [fileTypes, setFileTypes] = useState({});
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
@@ -43,28 +43,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const types = {};
-    Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
-      for (let i = 0; i < count; i++) {
-        const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
-        const key = `${projectIndex}-${i}`;
-        fetch(videoUrl, { method: 'HEAD' })
-          .then(res => {
-            types[key] = res.ok ? 'video' : 'image';
-            setFileTypes(prev => ({ ...prev, [key]: types[key] }));
-          })
-          .catch(() => {
-            types[key] = 'image';
-            setFileTypes(prev => ({ ...prev, [key]: 'image' }));
-          });
-      }
-    });
-  }, []);
-
-  useEffect(() => {
     const handleScroll = () => {
-      const projectElements = Array.from(document.querySelectorAll('.projectMedia'))
-        .filter(el => el.offsetParent !== null);
+      const projectElements = Array.from(document.querySelectorAll('.projectMedia')).filter(el => el.offsetParent !== null);
       const middleY = window.innerHeight * 0.45;
 
       projectElements.forEach((el, index) => {
@@ -79,97 +59,104 @@ export default function Home() {
   }, []);
 
   const scrollToProject = (index) => {
-    const el = sectionRefs.current[index];
+    const isMobile = window.innerWidth < 768;
+    const el = isMobile ? mobileSectionRefs.current[index] : sectionRefs.current[index];
+    console.log('🎯 Scroll triggered for index:', index, 'isMobile:', isMobile);
+    console.log('📍 Target element:', el);
+    console.log('🛹 Lenis instance:', lenisRef.current);
+
+    // Add new debug logs for element state
+    console.log('🔍 Element Details:', {
+      display: window.getComputedStyle(el).display,
+      visibility: window.getComputedStyle(el).visibility,
+      height: window.getComputedStyle(el).height,
+      offsetParent: el.offsetParent,
+      offsetTop: el.offsetTop,
+      offsetHeight: el.offsetHeight,
+      classList: Array.from(el.classList)
+    });
+  
     if (el && lenisRef.current) {
       const rect = el.getBoundingClientRect();
-      const scrollY = window.scrollY + rect.top - window.innerHeight * 0.449;
-      lenisRef.current.scrollTo(scrollY, { duration: 1.2 });
+      const offset = window.innerHeight * 0.449;
+      const scrollY = window.scrollY + rect.top - offset;
+  
+      // Keep existing debug logs
+      console.log('📊 Scroll Calculation:', {
+        'Element top position (rect.top)': rect.top,
+        'Current scroll position (window.scrollY)': window.scrollY,
+        'Window height': window.innerHeight,
+        'Offset calculation (windowHeight * 0.449)': offset,
+        'Final calculation': {
+          'scrollY + rect.top': window.scrollY + rect.top,
+          'minus offset': `${window.scrollY + rect.top} - ${offset} = ${scrollY}`
+        },
+        isMobile: window.innerWidth < 768
+      });
+
+      // Add new layout debug logs
+      console.log('📐 Layout Metrics:', {
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        documentHeight: document.documentElement.scrollHeight,
+        elementPosition: {
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height,
+          width: rect.width
+        },
+        isHidden: rect.height === 0 || rect.width === 0
+      });
+  
+      lenisRef.current.scrollTo(scrollY, { 
+        duration: 1.2,
+        onComplete: () => console.log('✅ Scroll animation completed')
+      });
+    } else {
+      console.error('❌ Scroll failed:', {
+        hasElement: !!el,
+        hasLenis: !!lenisRef.current,
+        refs: sectionRefs.current
+      });
     }
   };
 
-  // Add these state variables after the existing useState declarations
-  const [loadedAssets, setLoadedAssets] = useState(0);
-  const [totalAssets, setTotalAssets] = useState(0);
-
-  // Modify the useEffect that handles file types
-  useEffect(() => {
-    const types = {};
-    let total = 0;
-    let loaded = 0;
-
-    // Calculate total assets
-    Object.entries(PROJECT_FOLDERS).forEach(([_, count]) => {
-      total += count;
-    });
-    setTotalAssets(total);
-
-    // Check each asset
-    Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
-      for (let i = 0; i < count; i++) {
-        const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
-        const imageUrl = `/images/folder_${projectIndex}/${i}.webp`;
-        const key = `${projectIndex}-${i}`;
-
-        fetch(videoUrl, { method: 'HEAD' })
-          .then(res => {
-            types[key] = res.ok ? 'video' : 'image';
-            setFileTypes(prev => ({ ...prev, [key]: types[key] }));
-            loaded++;
-            setLoadedAssets(loaded);
-            console.log(`Loading progress: ${loaded}/${total} assets`);
-          })
-          .catch(() => {
-            types[key] = 'image';
-            setFileTypes(prev => ({ ...prev, [key]: 'image' }));
-            loaded++;
-            setLoadedAssets(loaded);
-            console.log(`Loading progress: ${loaded}/${total} assets`);
-          });
-      }
-    });
-  }, []);
-
-  // Add this after the imports to track individual media loading
   const onMediaLoad = () => {
-    setLoadedAssets(prev => {
-      const newCount = prev + 1;
-      console.log(`Media loaded: ${newCount}/${totalAssets}`);
-      return newCount;
-    });
+    // console.log('Media loaded');
   };
 
-  // Modify the getMediaType function to add onLoad handlers
-  const getMediaType = (index, i) => {
-    const key = `${index}-${i}`;
-    const type = fileTypes[key];
-    const videoPath = `/images/folder_${index}/${i}.mp4`;
+  // The function is named getMediaElement
+  const getMediaElement = (index, i) => {
     const imagePath = `/images/folder_${index}/${i}.webp`;
+    const videoPath = `/images/folder_${index}/${i}.mp4`;
 
-    if (!type) return null;
-
-    return type === 'video' ? (
-      <video
-        key={`v-${index}-${i}`}
-        className="w-full object-contain photo"
-        style={{ height: 'auto' }}
-        autoPlay
-        loop
-        muted
-        playsInline
-        onLoadedData={onMediaLoad}
-      >
-        <source src={videoPath} type="video/mp4" />
-      </video>
-    ) : (
+    return (
       <Image
         key={`img-${index}-${i}`}
         src={imagePath}
         alt={`Image ${i} from project ${index}`}
         width={1920}
+        priority={index === 0} // Only first image uses priority
+        loading="eager"
         height={1080}
         className="w-full object-contain photo"
         style={{ height: 'auto' }}
         onLoad={onMediaLoad}
+        onError={(e) => {
+          const video = document.createElement('video');
+          video.src = videoPath;
+          video.autoplay = true;
+          video.loop = true;
+          video.muted = true;
+          video.playsInline = true;
+          video.className = 'w-full object-contain';
+          video.style.height = 'auto';
+          video.onloadeddata = onMediaLoad;
+
+          if (e.target.parentNode) {
+            e.target.parentNode.replaceChild(video, e.target);
+          }
+        }}
       />
     );
   };
@@ -178,7 +165,7 @@ export default function Home() {
   
     setTimeout(() => {
       const mediaItems = gsap.utils.toArray('.photo');
-      console.log('⏱️ Media items after delay:', mediaItems);
+      // console.log('⏱️ Media items after delay:', mediaItems);
   
       if (!mediaItems.length) {
         console.warn('🚫 No media items found even after delay');
@@ -188,10 +175,10 @@ export default function Home() {
       // Entry animation – slide in from below
       gsap.fromTo(
         mediaItems,
-        { y: '100vh', opacity: 0 },
+        { y: '100vh', autoAlpha:0 },
         {
           y: 0,
-          opacity: 1,
+          autoAlpha:1,
           duration: ANIMATION_DURATION.xlong,  // Changed from 1 to short duration
           ease: 'power2.out',
           stagger: 0.03
@@ -206,7 +193,7 @@ export default function Home() {
           ease: 'power1.out'
         })
       );
-    }, 1000); 
+    }, 1); // <-- hardcoded 1 second
   }, { scope: container });  
 
   return (
@@ -291,13 +278,14 @@ export default function Home() {
           {[...Array(PROJECT_COUNT)].map((_, index) => (
             <div
               key={index}
-              ref={el => sectionRefs.current[index] = el}
+              id={`project-section-${index}`}
+              ref={el => mobileSectionRefs.current[index] = el}
               className="bg-red-500 h-full projectMedia flex flex-col gap-4"
               style={{ gridColumn: '1 / 12' }}
             >
               {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
                 <div key={i} className="w-full">
-                  {getMediaType(index, i)}
+                  {getMediaElement(index, i)}
                 </div>
               ))}
             </div>
@@ -323,7 +311,7 @@ export default function Home() {
       <div className="bg-green-500 col-start-3 col-span-2 flex flex-col gap-4">
         {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
           <div key={i} className="w-full">
-            {getMediaType(index, i)}
+            {getMediaElement(index, i)}  {/* Update this line */}
           </div>
         ))}
       </div>

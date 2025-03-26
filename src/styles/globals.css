@@ -56,3 +56,7 @@ html {
     visibility: visible;
     display: inline-block;
   }
+
+  .photo {
+    visibility: hidden;
+  }

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Lenis from '@studio-freight/lenis';
 import { ANIMATION_DURATION } from '@/constants/animation';
 
+
 const PROJECT_COUNT = 6;
 const PROJECT_FOLDERS = {
   0: 5,
@@ -24,8 +25,6 @@ export default function Home() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
   const sectionRefs = useRef([]);
-  const [mediaReady, setMediaReady] = useState(false);
-
   const lenisRef = useRef(null);
 
   const [fileTypes, setFileTypes] = useState({});
@@ -45,28 +44,21 @@ export default function Home() {
 
   useEffect(() => {
     const types = {};
-    let loaded = 0;
-    const total = PROJECT_FOLDERS[0]; // only first project for animation
-  
-    for (let i = 0; i < total; i++) {
-      const videoUrl = `/images/folder_0/${i}.mp4`;
-      const key = `0-${i}`;
-      fetch(videoUrl, { method: 'HEAD' })
-        .then(res => {
-          types[key] = res.ok ? 'video' : 'image';
-          setFileTypes(prev => ({ ...prev, [key]: types[key] }));
-        })
-        .catch(() => {
-          types[key] = 'image';
-          setFileTypes(prev => ({ ...prev, [key]: 'image' }));
-        })
-        .finally(() => {
-          loaded++;
-          if (loaded === total) {
-            setMediaReady(true);
-          }
-        });
-    }
+    Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
+      for (let i = 0; i < count; i++) {
+        const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
+        const key = `${projectIndex}-${i}`;
+        fetch(videoUrl, { method: 'HEAD' })
+          .then(res => {
+            types[key] = res.ok ? 'video' : 'image';
+            setFileTypes(prev => ({ ...prev, [key]: types[key] }));
+          })
+          .catch(() => {
+            types[key] = 'image';
+            setFileTypes(prev => ({ ...prev, [key]: 'image' }));
+          });
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -95,6 +87,58 @@ export default function Home() {
     }
   };
 
+  // Add these state variables after the existing useState declarations
+  const [loadedAssets, setLoadedAssets] = useState(0);
+  const [totalAssets, setTotalAssets] = useState(0);
+
+  // Modify the useEffect that handles file types
+  useEffect(() => {
+    const types = {};
+    let total = 0;
+    let loaded = 0;
+
+    // Calculate total assets
+    Object.entries(PROJECT_FOLDERS).forEach(([_, count]) => {
+      total += count;
+    });
+    setTotalAssets(total);
+
+    // Check each asset
+    Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
+      for (let i = 0; i < count; i++) {
+        const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
+        const imageUrl = `/images/folder_${projectIndex}/${i}.webp`;
+        const key = `${projectIndex}-${i}`;
+
+        fetch(videoUrl, { method: 'HEAD' })
+          .then(res => {
+            types[key] = res.ok ? 'video' : 'image';
+            setFileTypes(prev => ({ ...prev, [key]: types[key] }));
+            loaded++;
+            setLoadedAssets(loaded);
+            console.log(`Loading progress: ${loaded}/${total} assets`);
+          })
+          .catch(() => {
+            types[key] = 'image';
+            setFileTypes(prev => ({ ...prev, [key]: 'image' }));
+            loaded++;
+            setLoadedAssets(loaded);
+            console.log(`Loading progress: ${loaded}/${total} assets`);
+          });
+      }
+    });
+  }, []);
+
+  // Add this after the imports to track individual media loading
+  const onMediaLoad = () => {
+    setLoadedAssets(prev => {
+      const newCount = prev + 1;
+      console.log(`Media loaded: ${newCount}/${totalAssets}`);
+      return newCount;
+    });
+  };
+
+  // Modify the getMediaType function to add onLoad handlers
   const getMediaType = (index, i) => {
     const key = `${index}-${i}`;
     const type = fileTypes[key];
@@ -106,12 +150,13 @@ export default function Home() {
     return type === 'video' ? (
       <video
         key={`v-${index}-${i}`}
-        className="w-full object-contain"
+        className="w-full object-contain photo"
         style={{ height: 'auto' }}
         autoPlay
         loop
         muted
         playsInline
+        onLoadedData={onMediaLoad}
       >
         <source src={videoPath} type="video/mp4" />
       </video>
@@ -124,15 +169,15 @@ export default function Home() {
         height={1080}
         className="w-full object-contain photo"
         style={{ height: 'auto' }}
+        onLoad={onMediaLoad}
       />
     );
   };
 
   useGSAP(() => {
-    if (!mediaReady) return;
   
     setTimeout(() => {
-      const mediaItems = gsap.utils.toArray('.projectMedia:first-child .photo');
+      const mediaItems = gsap.utils.toArray('.photo');
       console.log('⏱️ Media items after delay:', mediaItems);
   
       if (!mediaItems.length) {
@@ -161,9 +206,9 @@ export default function Home() {
           ease: 'power1.out'
         })
       );
-    }, 1); // <-- hardcoded 1 second
-  }, { dependencies: [mediaReady], scope: container });  
-  
+    }, 1000); 
+  }, { scope: container });  
+
   return (
     <>
       <div ref={container} className="fixed top-0">
