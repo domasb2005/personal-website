@@ -30,6 +30,10 @@ export default function Home() {
 
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [previewImage, setPreviewImage] = useState({
+    src: '/images/folder_0/0.webp',
+    type: 'image'
+  });
 
   useEffect(() => {
     lenisRef.current = new Lenis();
@@ -51,6 +55,35 @@ export default function Home() {
         const rect = el.getBoundingClientRect();
         if (rect.top <= middleY && rect.bottom >= middleY) {
           setActiveProjectIndex(index);
+          
+          // Get all media elements in the current project section
+          const mediaElements = el.querySelectorAll('img, video');
+          
+          // Find the media element that most recently crossed the middle line
+          let recentlyCrossedMedia = null;
+          let smallestDistance = Infinity;
+          
+          mediaElements.forEach(media => {
+            const mediaRect = media.getBoundingClientRect();
+            const distanceFromMiddle = Math.abs(mediaRect.top - middleY);
+            
+            if (mediaRect.top <= middleY && distanceFromMiddle < smallestDistance) {
+              smallestDistance = distanceFromMiddle;
+              recentlyCrossedMedia = media;
+            }
+          });
+          
+          if (recentlyCrossedMedia) {
+            const isVideo = recentlyCrossedMedia.tagName.toLowerCase() === 'video';
+            const mediaIndex = Array.from(mediaElements).indexOf(recentlyCrossedMedia);
+            
+            setPreviewImage({
+              src: isVideo ? 
+                `/images/folder_${index}/${mediaIndex}.mp4` : 
+                `/images/folder_${index}/${mediaIndex}.webp`,
+              type: isVideo ? 'video' : 'image'
+            });
+          }
         }
       });
     };
@@ -75,12 +108,12 @@ export default function Home() {
       offsetHeight: el.offsetHeight,
       classList: Array.from(el.classList)
     });
-  
+
     if (el && lenisRef.current) {
       const rect = el.getBoundingClientRect();
       const offset = window.innerHeight * 0.449;
       const scrollY = window.scrollY + rect.top - offset;
-  
+
       // Keep existing debug logs
       console.log('📊 Scroll Calculation:', {
         'Element top position (rect.top)': rect.top,
@@ -107,8 +140,8 @@ export default function Home() {
         },
         isHidden: rect.height === 0 || rect.width === 0
       });
-  
-      lenisRef.current.scrollTo(scrollY, { 
+
+      lenisRef.current.scrollTo(scrollY, {
         duration: 1.2,
         onComplete: () => console.log('✅ Scroll animation completed')
       });
@@ -132,19 +165,19 @@ export default function Home() {
       const fullHeight = document.documentElement.scrollHeight;
       const scrolled = window.scrollY;
       const progress = scrolled / (fullHeight - windowHeight);
-      
+
       gsap.set(".progress-bar", {
         scaleY: Math.min(progress, 1), // clamp to max 1
       });
     };
-  
+
     // Initial update
     updateProgressBar();
-  
+
     // Listen to scroll and resize
     window.addEventListener('scroll', updateProgressBar);
     window.addEventListener('resize', updateProgressBar);
-  
+
     return () => {
       window.removeEventListener('scroll', updateProgressBar);
       window.removeEventListener('resize', updateProgressBar);
@@ -188,30 +221,30 @@ export default function Home() {
   };
 
   useGSAP(() => {
-  
+
     setTimeout(() => {
       const mediaItems = gsap.utils.toArray('.photo');
       const projectTitles = gsap.utils.toArray('h2.small-text');
-      
+
       if (!mediaItems.length) {
         console.warn('🚫 No media items found even after delay');
         return;
       }
-  
+
       // Entry animation – slide in from below
       gsap.fromTo(
         mediaItems,
-        { y: '100vh', autoAlpha:0 },
+        { y: '100vh', autoAlpha: 0 },
         {
           y: 0,
-          autoAlpha:1,
+          autoAlpha: 1,
           duration: ANIMATION_DURATION.xlong,
           ease: 'power2.out',
           stagger: 0.03
         }
       );
-      
-  
+
+
       timeline.add(
         gsap.to(mediaItems, {
           opacity: 0,
@@ -219,7 +252,7 @@ export default function Home() {
           ease: 'power1.out'
         })
       );
-      
+
       // Also add project titles to exit animation
       timeline.add(
         gsap.to(projectTitles, {
@@ -234,12 +267,48 @@ export default function Home() {
 
   return (
     <>
-    <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50" 
-     style={{ transform: 'scaleY(0)' }}></div>
+      <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50"
+        style={{ transform: 'scaleY(0)' }}></div>
+
+      {/* New Desktop Preview Grid */}
+      <div className="hidden md:grid fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]"
+        style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        <div className="bg-blue-500 h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
+          <div className="w-full h-full flex items-end justify-end">
+            {previewImage?.type === 'video' ? (
+              <video
+                src={previewImage.src}
+                className="h-full object-contain"
+                style={{
+                  maxWidth: '100%',
+                  objectPosition: 'right bottom',
+                }}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <Image
+                src={previewImage.src}
+                alt="Current preview"
+                width={1280}
+                height={720}
+                className="object-contain"
+                style={{
+                  width: 'auto',
+                  height: '100%',
+                  objectPosition: 'right bottom',
+                }}
+              />
+            )}
+          </div>
+        </div>      </div>
+
       <div ref={container} className="fixed top-0">
         <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
           style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-          
+
           {/* Mobile project names */}
           <div className="md:hidden h-full relative"
             style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
@@ -257,9 +326,8 @@ export default function Home() {
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text pb-[0.9rem] block text-right ${
-                      activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                    }`}
+                    className={`small-text pb-[0.9rem] block text-right ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                      }`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={() => scrollToProject(i)}
@@ -280,9 +348,8 @@ export default function Home() {
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text pb-[0.2rem] ${
-                      activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                    }`}
+                    className={`small-text pb-[0.2rem] ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
+                      }`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={() => scrollToProject(i)}
@@ -303,6 +370,7 @@ export default function Home() {
               />
             </div>
           </div>
+
         </div>
       </div>
 
@@ -330,32 +398,36 @@ export default function Home() {
           ))}
         </div>
 
-{/* Desktop Grid */}
-<div
-  className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[10dvh] gap-x-4"
-  style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
->
-  {[...Array(PROJECT_COUNT)].map((_, index) => (
-    <div
-      key={index}
-      ref={el => sectionRefs.current[index] = el}
-      className="projectMedia bg-red-500 h-auto grid gap-4"
-      style={{
-        gridColumn: '1 / 5',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-      }}
-    >
-      <span className="col-span-2 text-white p-2">Project {index + 1}</span>
-      <div className="bg-green-500 col-start-3 col-span-2 flex flex-col gap-4">
-        {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
-          <div key={i} className="w-full">
-            {getMediaElement(index, i)}  {/* Update this line */}
-          </div>
-        ))}
+        {/* Desktop Grid */}
+        <div
+          className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[10dvh] gap-x-4"
+          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+        >
+          {[...Array(PROJECT_COUNT)].map((_, index) => (
+            <div
+              key={index}
+              ref={el => sectionRefs.current[index] = el}
+              className="projectMedia bg-red-500 h-auto grid gap-4"
+              style={{
+                gridColumn: '1 / 5',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+              }}
+            >
+              <span className="col-span-2 text-white p-2">Project {index + 1}</span>
+              <div className="bg-green-500 col-start-3 col-span-2 flex flex-col gap-4">
+                {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
+                  <div key={i} className="w-full">
+                    {getMediaElement(index, i)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className='h-[50dvh]' style={{gridColumn: '1/5'}}></div>
+
+
+        </div>
       </div>
-    </div>
-  ))}
-</div>      </div>
     </>
   );
 }

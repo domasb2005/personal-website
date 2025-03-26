@@ -16,37 +16,63 @@ export default function LoadingScreen({ onLoadComplete }) {
   const router = useRouter();
 
   useEffect(() => {
-    const totalAssets = Object.values(PROJECT_FOLDERS).reduce((a, b) => a + b, 0) * 2; // Both .webp and .mp4
+    const totalAssets = Object.values(PROJECT_FOLDERS).reduce((a, b) => a + b, 0) * 2;
     let loaded = 0;
 
     const preloadImage = (url) => {
       return new Promise((resolve) => {
         const img = new Image();
         img.src = url;
-        img.onload = () => resolve();
-        img.onerror = () => resolve(); // Still resolve on error to continue loading
+        // Set high resolution
+        img.width = 1280;
+        img.height = 720;
+        
+        img.onload = () => {
+          // Force browser to keep in memory
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL()); // Cache in memory
+        };
+        img.onerror = () => resolve();
       });
     };
 
     const preloadVideo = (url) => {
       return new Promise((resolve) => {
-        fetch(url, { method: 'HEAD' })
-          .then(() => resolve())
-          .catch(() => resolve()); // Still resolve on error
+        const video = document.createElement('video');
+        video.preload = 'auto';
+        video.autoplay = false;
+        video.muted = true;
+        video.src = url;
+        
+        video.onloadeddata = () => {
+          // Force video preload
+          video.play().then(() => {
+            video.pause();
+            video.currentTime = 0;
+            resolve();
+          }).catch(() => resolve());
+        };
+        
+        video.onerror = () => resolve();
       });
     };
 
     const loadAssets = async () => {
       const promises = [];
+      const cache = {};
 
-      // Preload all project assets
       Object.entries(PROJECT_FOLDERS).forEach(([projectIndex, count]) => {
         for (let i = 0; i < count; i++) {
           const imageUrl = `/images/folder_${projectIndex}/${i}.webp`;
           const videoUrl = `/images/folder_${projectIndex}/${i}.mp4`;
 
           promises.push(
-            preloadImage(imageUrl).then(() => {
+            preloadImage(imageUrl).then((dataUrl) => {
+              if (dataUrl) cache[imageUrl] = dataUrl;
               loaded++;
               setProgress((loaded / totalAssets) * 100);
               setAssetsLoaded(loaded);
@@ -64,6 +90,8 @@ export default function LoadingScreen({ onLoadComplete }) {
       });
 
       await Promise.all(promises);
+      // Store cache in window for global access
+      window.__assetCache = cache;
       onLoadComplete();
     };
 
