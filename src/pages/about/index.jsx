@@ -44,18 +44,35 @@ export default function Index() {
       stagger: 0.015,
     }, 0);
   
-    // Animate H2s back
     timeline.to(allH2s, {
-      x: 0,
-      y: 0,
+    x: 0,
+    y: 0,
+    duration: ANIMATION_DURATION.short,
+    ease: 'power2.inOut',
+    stagger: ANIMATION_DURATION.short/allH2s.length,
+    onStart: function(i) {
+      // does not work
+      const element = this.targets()[i];
+      if (element && element.classList.contains('text-left')) {
+        element.classList.remove('text-left');
+        element.classList.add('text-right');
+      }
+    }
+  }, 0.1);
+
+    // Set opacity for all H2s except the first one (ALGEBRA)
+    const nonFirstH2s = allH2s.filter((h2, index) => {
+      return h2.textContent !== projectNames[0];
+    });
+    
+    timeline.to(nonFirstH2s, {
+      opacity: 0.32,
       duration: ANIMATION_DURATION.short,
       ease: 'power2.inOut',
-      stagger: ANIMATION_DURATION.short/allH2s.length,
-    }, 0.1);
+    }, 0.2);
   
     return timeline;
   };
-
   const projectNames = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'];
 
   const getProcessedHTML = (text) => {
@@ -88,9 +105,17 @@ export default function Index() {
       gsap.to(h2.element, {
         x: dx,
         y: dy,
+        // Remove the text property as it doesn't work this way
         duration: ANIMATION_DURATION.long,
         ease: 'power2.inOut',
-        delay: index * 0.1
+        delay: index * 0.1,
+        onStart: function() {
+          // Directly modify the className to change text alignment
+          if (h2.element.classList.contains('text-right')) {
+            h2.element.classList.remove('text-right');
+            h2.element.classList.add('text-left');
+          }
+        }
       });
     });
   };
@@ -291,7 +316,7 @@ export default function Index() {
           </div>
           <div className="whitespace-nowrap text-left absolute bottom-[2rem] right-[2rem]">
             {projectNames.map((name, i) => (
-              <h2 key={i} ref={el => mobileProjectRefs.current[i] = el} className="!leading-[2.5rem] small-text">
+              <h2 key={i} ref={el => mobileProjectRefs.current[i] = el} className=" small-text text-right pb-[0.9rem]">
                 {name}
               </h2>
             ))}
@@ -309,7 +334,7 @@ export default function Index() {
 
         </div>
 
-        <div className="hidden md:grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        <div className="hidden md:grid auto-cols-fr gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
           {/* Fill all 16 columns */}
           {[...Array(16)].map((_, index) => (
             <div key={index} className="h-full" />
@@ -347,7 +372,7 @@ export default function Index() {
             {/* H2s are absolutely positioned inside this wrapper */}
             <div className="absolute top-[2.6rem] left-0 w-full whitespace-nowrap text-left">
               {projectNames.map((name, i) => (
-                <h2 key={i} ref={el => projectRefs.current[i] = el} className="small-text">
+                <h2 key={i} ref={el => projectRefs.current[i] = el} className="small-text pb-[0.2rem]">
                   {name}
                 </h2>
               ))}

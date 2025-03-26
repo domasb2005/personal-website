@@ -165,8 +165,8 @@ export default function Home() {
   
     setTimeout(() => {
       const mediaItems = gsap.utils.toArray('.photo');
-      // console.log('⏱️ Media items after delay:', mediaItems);
-  
+      const projectTitles = gsap.utils.toArray('h2.small-text');
+      
       if (!mediaItems.length) {
         console.warn('🚫 No media items found even after delay');
         return;
@@ -179,22 +179,32 @@ export default function Home() {
         {
           y: 0,
           autoAlpha:1,
-          duration: ANIMATION_DURATION.xlong,  // Changed from 1 to short duration
+          duration: ANIMATION_DURATION.xlong,
           ease: 'power2.out',
           stagger: 0.03
         }
       );
+      
   
-      // Exit animation – fade out
       timeline.add(
         gsap.to(mediaItems, {
           opacity: 0,
-          duration: ANIMATION_DURATION.short,  // Changed from 0.8 to short duration
+          duration: ANIMATION_DURATION.short,
           ease: 'power1.out'
         })
       );
-    }, 1); // <-- hardcoded 1 second
-  }, { scope: container });  
+      
+      // Also add project titles to exit animation
+      timeline.add(
+        gsap.to(projectTitles, {
+          opacity: 1,
+          duration: ANIMATION_DURATION.short,
+          ease: 'power1.out'
+        }),
+        "<" // Start at the same time as the previous animation
+      );
+    }, 1);
+  }, { scope: container });
 
   return (
     <>
@@ -219,7 +229,7 @@ export default function Home() {
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text !leading-[2.5rem] block text-right ${
+                    className={`small-text pb-[0.9rem] block text-right ${
                       activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
                     }`}
                     onMouseEnter={() => setHoveredIndex(i)}
@@ -242,7 +252,7 @@ export default function Home() {
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text !leading-[1.8rem] ${
+                    className={`small-text pb-[0.2rem] ${
                       activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
                     }`}
                     onMouseEnter={() => setHoveredIndex(i)}
