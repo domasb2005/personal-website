@@ -51,6 +51,12 @@ html {
   }
 }
 
+@layer components {
+    .number-text {
+      @apply text-[var(--color-black)] text-[5rem] font-['Grotesk'] leading-[4rem];
+    }
+  }
+
 .invisible-placeholder {
     opacity: 0;
     visibility: visible;

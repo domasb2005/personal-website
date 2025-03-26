@@ -53,6 +53,22 @@ export default function Home() {
   });
   const [descriptionIndex, setDescriptionIndex] = useState(0);
 
+  const lastScrollY = useRef(0);
+const [scrollDirection, setScrollDirection] = useState(0);
+const digit1Refs = useRef([]);
+const digit2Refs = useRef([]);
+
+useEffect(() => {
+  const handleScrollDirection = () => {
+    const currentScrollY = window.scrollY;
+    setScrollDirection(currentScrollY > lastScrollY.current ? 1 : -1);
+    lastScrollY.current = currentScrollY;
+  };
+
+  window.addEventListener('scroll', handleScrollDirection);
+  return () => window.removeEventListener('scroll', handleScrollDirection);
+}, []);
+
   useEffect(() => {
     lenisRef.current = new Lenis();
     function raf(time) {
@@ -239,6 +255,10 @@ export default function Home() {
     );
   };
 
+  
+
+  
+
   useGSAP(() => {
 
     setTimeout(() => {
@@ -286,17 +306,14 @@ export default function Home() {
 
   return (
     <>
-      <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50"
-        style={{ transform: 'scaleY(0)' }}></div>
-
-
+      {/* Progress Bar */}
+      <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50" style={{ transform: 'scaleY(0)' }} />
+  
+      {/* FIXED OVERLAY - Titles and Indicator */}
       <div ref={container} className="fixed top-0">
-        <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
-          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-
-          {/* Mobile project names */}
-          <div className="md:hidden h-full relative"
-            style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
+        <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+          {/* Mobile Titles */}
+          <div className="md:hidden h-full relative" style={{ gridColumnStart: 16, gridColumnEnd: 17 }}>
             <div className="whitespace-nowrap absolute bottom-0 right-0 flex justify-end gap-4">
               <div
                 className="w-3 h-3 mt-1.5"
@@ -311,8 +328,7 @@ export default function Home() {
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text pb-[0.9rem] block text-right ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                      }`}
+                    className={`small-text pb-[0.9rem] block text-right ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'}`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={() => scrollToProject(i)}
@@ -324,17 +340,15 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Desktop project names */}
-          <div className="hidden md:block"
-            style={{ gridColumnStart: 6, gridColumnEnd: 8 }}>
+  
+          {/* Desktop Titles */}
+          <div className="hidden md:block" style={{ gridColumnStart: 6, gridColumnEnd: 8 }}>
             <div className="whitespace-nowrap flex justify-between">
               <div className="text-left z-[40]">
                 {PROJECT_NAMES.map((name, i) => (
                   <h2
                     key={i}
-                    className={`small-text pb-[0.2rem] ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'
-                      }`}
+                    className={`small-text pb-[0.2rem] ${activeProjectIndex === i || hoveredIndex === i ? 'opacity-[1]' : 'opacity-[0.32]'}`}
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onClick={() => scrollToProject(i)}
@@ -355,22 +369,18 @@ export default function Home() {
               />
             </div>
           </div>
-
         </div>
       </div>
-      {/*preview*/}
-      <div className="hidden md:grid pointer-events-none fixed z-[0] top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]"
-        style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+  
+      {/* FIXED OVERLAY - Preview + Description */}
+      <div className="hidden md:grid pointer-events-none fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
           <div className="w-full h-full flex items-end justify-end">
             {previewImage?.type === 'video' ? (
               <video
                 src={previewImage.src}
                 className="h-full object-contain"
-                style={{
-                  maxWidth: '100%',
-                  objectPosition: 'right bottom',
-                }}
+                style={{ maxWidth: '100%', objectPosition: 'right bottom' }}
                 autoPlay
                 muted
                 loop
@@ -383,58 +393,50 @@ export default function Home() {
                 width={1280}
                 height={720}
                 className="object-contain"
-                style={{
-                  width: 'auto',
-                  height: '100%',
-                  objectPosition: 'right bottom',
-                }}
+                style={{ width: 'auto', height: '100%', objectPosition: 'right bottom' }}
               />
             )}
           </div>
         </div>
-        <div className='small-text pointer-events-auto flex justify-between'
-          style={{ gridColumn: '9/ span 8' }}>
-          <span className='overflow-hidden'>
-            <p id='description'>{PROJECT_DESCRIPTIONS[descriptionIndex]}</p>
+  
+        <div className="small-text pointer-events-auto flex justify-between" style={{ gridColumn: '9 / span 8' }}>
+          <span className="overflow-hidden">
+            <p id="description">{PROJECT_DESCRIPTIONS[descriptionIndex]}</p>
           </span>
-
           {PROJECT_LINKS[descriptionIndex] && (
             <span className="overflow-hidden">
-  <a
-    href={PROJECT_LINKS[descriptionIndex]}
-    target="_blank"
-    rel="noopener noreferrer"
-    className=" flex items-center group"
-  >
-    Visit
-    <span className="svg-wrapper ml-2 relative my-[1px] w-[10px] h-[10px] overflow-hidden inline-block">
-      <span className="block w-full transition-transform duration-500 ease-out delay-100 group-hover:translate-x-full group-hover:-translate-y-full group-hover:delay-0">
-        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
-        </svg>
-      </span>
-      <span className="absolute block top-0 left-0 w-full -translate-x-full translate-y-full transition-transform duration-500 ease-out group-hover:translate-x-0 group-hover:translate-y-0 group-hover:delay-100">
-        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
-        </svg>
-      </span>
-    </span>
-  </a>
-</span>          )}
+              <a
+                href={PROJECT_LINKS[descriptionIndex]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center group"
+              >
+                Visit
+                <span className="svg-wrapper ml-2 relative my-[1px] w-[10px] h-[10px] overflow-hidden inline-block">
+                  <span className="block w-full transition-transform duration-500 ease-out delay-100 group-hover:translate-x-full group-hover:-translate-y-full group-hover:delay-0">
+                    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
+                    </svg>
+                  </span>
+                  <span className="absolute block top-0 left-0 w-full -translate-x-full translate-y-full transition-transform duration-500 ease-out group-hover:translate-x-0 group-hover:translate-y-0 group-hover:delay-100">
+                    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
+                    </svg>
+                  </span>
+                </span>
+              </a>
+            </span>
+          )}
         </div>
       </div>
-
-      {/* MAIN CONTENT */}
+  
+      {/* MAIN SCROLLABLE SECTION */}
       <div className="mt-[calc(45dvh-2rem)]">
-        {/* Mobile Grid */}
-        <div
-          className="w-[100dvw] p-[2rem] grid md:hidden gap-y-[10dvh] gap-x-4"
-          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
-        >
+        {/* Mobile Version */}
+        <div className="w-[100dvw] p-[2rem] grid md:hidden gap-y-[10dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
           {[...Array(PROJECT_COUNT)].map((_, index) => (
             <div
               key={index}
-              id={`project-section-${index}`}
               ref={el => mobileSectionRefs.current[index] = el}
               className="bg-red-500 h-full projectMedia flex flex-col gap-4"
               style={{ gridColumn: '1 / 12' }}
@@ -447,35 +449,40 @@ export default function Home() {
             </div>
           ))}
         </div>
-
-        {/* Desktop Grid */}
-        <div
-          className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[10dvh] gap-x-4"
-          style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
-        >
-          {[...Array(PROJECT_COUNT)].map((_, index) => (
-            <div
-              key={index}
-              ref={el => sectionRefs.current[index] = el}
-              className="projectMedia bg-red-500 h-auto grid gap-4"
-              style={{
-                gridColumn: '1 / 5',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-              }}
-            >
-              <span className="col-span-2 text-white p-2">Project {index + 1}</span>
-              <div className="bg-green-500 col-start-3 col-span-2 flex flex-col gap-4">
-                {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
-                  <div key={i} className="w-full">
-                    {getMediaElement(index, i)}
-                  </div>
-                ))}
+  
+        {/* Desktop Version */}
+        <div className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[10dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        {[...Array(PROJECT_COUNT)].map((_, index) => (
+          <div
+            key={index}
+            ref={el => sectionRefs.current[index] = el}
+            className="projectMedia h-auto grid gap-4"
+            style={{
+              gridColumn: '1 / 5',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+            }}
+          >
+            {/* Numbers container */}
+            <div className="col-span-2 min-h-[30dvh]"> {/* Increased height to ensure sticky behavior */}
+              <div className={`sticky ${index === 0 ? 'top-[45dvh]' : 'top-[45dvh]'}`}>
+                <div className="number-text">
+                  <span className="number1" ref={el => digit1Refs.current[index] = el}>0</span>
+                  <span className="number2" ref={el => digit2Refs.current[index] = el}>{index + 1}</span>
+                </div>
               </div>
             </div>
-          ))}
-          <div className='h-[50dvh]' style={{ gridColumn: '1/5' }}></div>
 
-
+            {/* Images container */}
+            <div className="col-start-3 col-span-2 flex flex-col gap-4">
+              {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
+                <div key={i} className="w-full">
+                  {getMediaElement(index, i)}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+          <div className="h-[50dvh]" style={{ gridColumn: '1/5' }}></div>
         </div>
       </div>
     </>
