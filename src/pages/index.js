@@ -125,6 +125,32 @@ export default function Home() {
     // console.log('Media loaded');
   };
 
+  useEffect(() => {
+    // ScrollTrigger logic for scroll bar
+    const updateProgressBar = () => {
+      const windowHeight = window.innerHeight;
+      const fullHeight = document.documentElement.scrollHeight;
+      const scrolled = window.scrollY;
+      const progress = scrolled / (fullHeight - windowHeight);
+      
+      gsap.set(".progress-bar", {
+        scaleY: Math.min(progress, 1), // clamp to max 1
+      });
+    };
+  
+    // Initial update
+    updateProgressBar();
+  
+    // Listen to scroll and resize
+    window.addEventListener('scroll', updateProgressBar);
+    window.addEventListener('resize', updateProgressBar);
+  
+    return () => {
+      window.removeEventListener('scroll', updateProgressBar);
+      window.removeEventListener('resize', updateProgressBar);
+    };
+  }, []);
+
   // The function is named getMediaElement
   const getMediaElement = (index, i) => {
     const imagePath = `/images/folder_${index}/${i}.webp`;
@@ -208,6 +234,8 @@ export default function Home() {
 
   return (
     <>
+    <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50" 
+     style={{ transform: 'scaleY(0)' }}></div>
       <div ref={container} className="fixed top-0">
         <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4"
           style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
