@@ -56,19 +56,27 @@ export default function Home() {
   const lastScrollY = useRef(0);
   const [scrollDirection, setScrollDirection] = useState(0);
 
-useEffect(() => {
-  const handleScrollDirection = () => {
-    const currentScrollY = window.scrollY;
-    setScrollDirection(currentScrollY > lastScrollY.current ? 1 : -1);
-    lastScrollY.current = currentScrollY;
-  };
+  useEffect(() => {
+    const handleScrollDirection = () => {
+      const currentScrollY = window.scrollY;
+      setScrollDirection(currentScrollY > lastScrollY.current ? 1 : -1);
+      lastScrollY.current = currentScrollY;
+    };
 
-  window.addEventListener('scroll', handleScrollDirection);
-  return () => window.removeEventListener('scroll', handleScrollDirection);
-}, []);
+    window.addEventListener('scroll', handleScrollDirection);
+    return () => window.removeEventListener('scroll', handleScrollDirection);
+  }, []);
 
   useEffect(() => {
-    lenisRef.current = new Lenis();
+    lenisRef.current = new Lenis({
+      duration: 1.2,
+      smoothWheel: true,
+      wheelMultiplier: 0.3,    // Reduce wheel multiplier to slow down manual scrolling
+      touchMultiplier: 1.5,    // Adjust touch scrolling speed
+      infinite: false,
+      maxSpeed: 6,            // Limit maximum scroll speed (pixels/frame)
+    });
+
     function raf(time) {
       lenisRef.current.raf(time);
       requestAnimationFrame(raf);
@@ -109,18 +117,18 @@ useEffect(() => {
           if (recentlyCrossedMedia) {
             const isVideo = recentlyCrossedMedia.tagName.toLowerCase() === 'video';
             const mediaIndex = Array.from(mediaElements).indexOf(recentlyCrossedMedia);
-            
+
             // Use the media map to get the correct file path
             if (typeof window !== 'undefined' && window.__mediaMap) {
               const mediaMap = window.__mediaMap;
               const folderMedia = mediaMap[index] || { images: [], videos: [] };
-              
+
               if (isVideo) {
                 // Find the actual video file that matches this index
-                const matchingVideos = folderMedia.videos?.filter(filename => 
+                const matchingVideos = folderMedia.videos?.filter(filename =>
                   filename.startsWith(`${mediaIndex}-min.`) || filename === `${mediaIndex}.mp4`
                 );
-                
+
                 if (matchingVideos && matchingVideos.length > 0) {
                   setPreviewImage({
                     src: `/images/folder_${index}/${matchingVideos[0]}`,
@@ -131,10 +139,10 @@ useEffect(() => {
                 }
               } else {
                 // Find the actual image file that matches this index
-                const matchingImages = folderMedia.images?.filter(filename => 
+                const matchingImages = folderMedia.images?.filter(filename =>
                   filename.startsWith(`${mediaIndex}-min.`) || filename === `${mediaIndex}.jpg` || filename === `${mediaIndex}.png`
                 );
-                
+
                 if (matchingImages && matchingImages.length > 0) {
                   setPreviewImage({
                     src: `/images/folder_${index}/${matchingImages[0]}`,
@@ -184,35 +192,13 @@ useEffect(() => {
       const offset = window.innerHeight * 0.449;
       const scrollY = window.scrollY + rect.top - offset;
 
-      // Keep existing debug logs
-      console.log('📊 Scroll Calculation:', {
-        'Element top position (rect.top)': rect.top,
-        'Current scroll position (window.scrollY)': window.scrollY,
-        'Window height': window.innerHeight,
-        'Offset calculation (windowHeight * 0.449)': offset,
-        'Final calculation': {
-          'scrollY + rect.top': window.scrollY + rect.top,
-          'minus offset': `${window.scrollY + rect.top} - ${offset} = ${scrollY}`
-        },
-        isMobile: window.innerWidth < 768
-      });
+      const scrollDistance = Math.abs(scrollY - window.scrollY);
+      let duration = scrollDistance / 500; //sec cap
+      duration = Math.min(Math.max(duration, 1.2), 5); // clamp
 
-      // Add new layout debug logs
-      console.log('📐 Layout Metrics:', {
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        documentHeight: document.documentElement.scrollHeight,
-        elementPosition: {
-          top: rect.top,
-          bottom: rect.bottom,
-          height: rect.height,
-          width: rect.width
-        },
-        isHidden: rect.height === 0 || rect.width === 0
-      });
 
       lenisRef.current.scrollTo(scrollY, {
-        duration: 1.2,
+        duration: duration,
         onComplete: () => console.log('✅ Scroll animation completed')
       });
     } else {
@@ -255,10 +241,10 @@ useEffect(() => {
   }, []);
 
   // Import useEffect at the top of the file (already there)
-  
+
   // Add this state to track if media map is loaded
   const [mediaMapLoaded, setMediaMapLoaded] = useState(false);
-  
+
   // Add this effect to load the media map
   useEffect(() => {
     // Fetch the media map if it's not already in window
@@ -289,18 +275,18 @@ useEffect(() => {
   // The function is named getMediaElement
   const getMediaElement = (index, i) => {
     if (typeof window === 'undefined' || !window.__mediaMap) return null;
-  
+
     const mediaMap = window.__mediaMap;
     const folderMedia = mediaMap[index] || { images: [], videos: [] };
-  
+
     const matchingImage = folderMedia.images.find(filename =>
       filename.startsWith(`${i}-min.`) || filename === `${i}.jpg` || filename === `${i}.png`
     );
-  
+
     const matchingVideo = folderMedia.videos.find(filename =>
       filename.startsWith(`${i}-min.`) || filename === `${i}.mp4`
     );
-  
+
     if (matchingVideo) {
       return (
         <video
@@ -316,7 +302,7 @@ useEffect(() => {
         />
       );
     }
-  
+
     if (matchingImage) {
       return (
         <Image
@@ -333,42 +319,39 @@ useEffect(() => {
         />
       );
     }
-  
-    return null; // Strict: don't return anything if it's not in the map
-  };  // Add this useEffect for the number animation
-  // Add this state at the top of your component with other states
+
+    return null; 
+  }; 
   const [raisedNumbers, setRaisedNumbers] = useState(new Set());
-  
-  // Modify the animation logic
+
+  // project index  animation logic
   useEffect(() => {
     const handleNumberAnimation = () => {
       const numberElements = document.querySelectorAll('.number-text');
-      
+
       numberElements.forEach((el, index) => {
         // Skip if already animated
 
-  
+
         const rect = el.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const elementPositionDVH = (rect.top / viewportHeight) * 100;
-        
+
         const numholdElement = document.querySelector(`.numhold${index}`);
-        const firstNumber = numholdElement?.querySelector('.number1');
-        const secondNumber = numholdElement?.querySelector('.number2');
-  
+
         if (elementPositionDVH >= 50 && elementPositionDVH <= 55 && scrollDirection === 1) {
           if (raisedNumbers.has(index)) {
-            console.log(`⏭️ Skipping animation for ${index} - already raised`);
+            // console.log(`⏭️ Skipping animation for ${index} - already raised`);
             return;
           }
           console.log(`🎬 Attempting animation UP for element ${index}`);
           if (numholdElement) {
             // Mark current index as raised
             setRaisedNumbers(prev => new Set([...prev, index]));
-            
+
             // Get all children of the current numhold element
             const numbers = numholdElement.children;
-            
+
             // If not the first index, animate previous index's numbers back down
             if (index == 1) {
               const prevNumholdElement = document.querySelector(`.numhold${index-1}`);
@@ -396,7 +379,7 @@ useEffect(() => {
                 })
               }
             }
-            
+
             // Animate current index numbers up
             gsap.to(numbers, {
               y: '-10dvh',
@@ -408,10 +391,10 @@ useEffect(() => {
             });
           }
         }
-        else if(elementPositionDVH >= 40 && elementPositionDVH <= 45 && scrollDirection === -1) {
+        else if(elementPositionDVH >= 40 && elementPositionDVH <= 48 && scrollDirection === -1) {
           if (numholdElement) {
             const numbers = numholdElement.children;
-            
+
             if (index === 0) {
               // Remove raised flag for current index
               setRaisedNumbers(prev => {
@@ -419,7 +402,7 @@ useEffect(() => {
                 next.delete(index);
                 return next;
               });
-              
+
               // Reset current numbers
               gsap.to(numbers, {
                 y: '0',
@@ -427,7 +410,7 @@ useEffect(() => {
                 ease: 'power2.out',
                 stagger: 0.1,
               });
-              
+
               // Remove raised flag for next index and reset its numbers
               const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
               if (nextNumholdElement) {
@@ -450,7 +433,7 @@ useEffect(() => {
                 next.delete(index);
                 return next;
               });
-              
+
               // Move current numbers to first level
               gsap.to(numbers, {
                 y: '-10dvh',
@@ -458,7 +441,7 @@ useEffect(() => {
                 ease: 'power2.out',
                 stagger: 0.1,
               });
-              
+
               // Remove raised flag for next index and reset its numbers
               const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
               if (nextNumholdElement) {
@@ -479,13 +462,13 @@ useEffect(() => {
         }
       });
     };
-  
+
     window.addEventListener('scroll', handleNumberAnimation);
     return () => window.removeEventListener('scroll', handleNumberAnimation);
   }, [scrollDirection, raisedNumbers]); // Add raisedNumbers to dependencies
 
 
-  
+
 
   useGSAP(() => {
     console.log('🎭 useGSAP triggered', {
@@ -540,7 +523,7 @@ useEffect(() => {
         "<" // Start at the same time as the previous animation
       );
     }, 1);
-  }, { 
+  }, {
     scope: container,
     dependencies: [mediaMapLoaded], // Add mediaMapLoaded as a dependency
   });
@@ -549,7 +532,7 @@ useEffect(() => {
     <>
       {/* Progress Bar */}
       <div className="progress-bar fixed top-0 left-0 md:left-auto md:right-0 w-[8px] h-[100dvh] bg-[var(--color-black)] origin-top z-50" style={{ transform: 'scaleY(0)' }} />
-  
+
       {/* FIXED OVERLAY - Titles and Indicator */}
       <div ref={container} className="fixed top-0">
         <div className="h-[100dvh] w-[100dvw] fixed top-0 pt-[45dvh] p-[2rem] grid auto-cols-fr gap-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
@@ -581,7 +564,7 @@ useEffect(() => {
               </div>
             </div>
           </div>
-  
+
           {/* Desktop Titles */}
           <div className="hidden md:block" style={{ gridColumnStart: 6, gridColumnEnd: 8 }}>
             <div className="whitespace-nowrap flex justify-between">
@@ -612,11 +595,11 @@ useEffect(() => {
           </div>
         </div>
       </div>
-  
+
       {/* FIXED OVERLAY - Preview + Description */}
       <div className="hidden md:grid pointer-events-none fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
         <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div>
-              
+
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
           <div className="w-full h-full flex items-end justify-end">
             {previewImage?.type === 'video' ? (
@@ -641,7 +624,7 @@ useEffect(() => {
             )}
           </div>
         </div>
-  
+
         <div className="small-text pointer-events-auto flex justify-between" style={{ gridColumn: '9 / span 8' }}>
           <span className="overflow-hidden">
             <p id="description">{PROJECT_DESCRIPTIONS[descriptionIndex]}</p>
@@ -672,7 +655,7 @@ useEffect(() => {
           )}
         </div>
       </div>
-  
+
       {/* MAIN SCROLLABLE SECTION */}
       <div className="mt-[calc(45dvh-2rem)] z-[60]">
         {/* Mobile Version */}
@@ -681,7 +664,7 @@ useEffect(() => {
             <div
               key={index}
               ref={el => mobileSectionRefs.current[index] = el}
-              className="bg-red-500 h-full projectMedia flex flex-col gap-4"
+              className="h-full projectMedia flex flex-col gap-4"
               style={{ gridColumn: '1 / 12' }}
             >
               {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
@@ -692,38 +675,38 @@ useEffect(() => {
             </div>
           ))}
         </div>
-  
+
         {/* Desktop Version */}
         <div className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[5dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-        {[...Array(PROJECT_COUNT)].map((_, index) => (
-          <div
-            key={index}
-            ref={el => sectionRefs.current[index] = el}
-            className="projectMedia h-auto grid gap-4"
-            style={{
-              gridColumn: '1 / 5',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-            }}
-          >
-            {/* Numbers container */}
-            <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
-              <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
+          {[...Array(PROJECT_COUNT)].map((_, index) => (
+            <div
+              key={index}
+              ref={el => sectionRefs.current[index] = el}
+              className="projectMedia h-auto grid gap-4"
+              style={{
+                gridColumn: '1 / 5',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+              }}
+            >
+              {/* Numbers container */}
+              <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
+                <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
                   <span className="number1 inline-block">0</span>
                   <span className="number2 inline-block">{index + 1}</span>
+                </div>
+              </div>
+
+              {/* Images container */}
+              <div className="col-start-3 col-span-2 flex flex-col gap-4">
+                {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
+                  <div key={i} className="w-full">
+                    {getMediaElement(index, i)}
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Images container */}
-            <div className="col-start-3 col-span-2 flex flex-col gap-4">
-              {[...Array(PROJECT_FOLDERS[index])].map((_, i) => (
-                <div key={i} className="w-full">
-                  {getMediaElement(index, i)}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-          <div className="h-[50dvh]" style={{ gridColumn: '1/5' }}></div>
+          ))}
+          <div className="h-[40dvh]" style={{ gridColumn: '1/5' }}></div>
         </div>
       </div>
     </>
