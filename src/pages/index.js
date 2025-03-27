@@ -13,7 +13,7 @@ const PROJECT_COUNT = 6;
 const PROJECT_FOLDERS = {
   0: 5,
   1: 2,
-  2: 6,
+  2: 7,
   3: 4,
   4: 6,
   5: 6,
@@ -111,13 +111,50 @@ useEffect(() => {
           if (recentlyCrossedMedia) {
             const isVideo = recentlyCrossedMedia.tagName.toLowerCase() === 'video';
             const mediaIndex = Array.from(mediaElements).indexOf(recentlyCrossedMedia);
-
-            setPreviewImage({
-              src: isVideo ?
-                `/images/folder_${index}/${mediaIndex}-min.mp4` :
-                `/images/folder_${index}/${mediaIndex}-min.jpg`,
-              type: isVideo ? 'video' : 'image'
-            });
+            
+            // Use the media map to get the correct file path
+            if (typeof window !== 'undefined' && window.__mediaMap) {
+              const mediaMap = window.__mediaMap;
+              const folderMedia = mediaMap[index] || { images: [], videos: [] };
+              
+              if (isVideo) {
+                // Find the actual video file that matches this index
+                const matchingVideos = folderMedia.videos?.filter(filename => 
+                  filename.startsWith(`${mediaIndex}-min.`) || filename === `${mediaIndex}.mp4`
+                );
+                
+                if (matchingVideos && matchingVideos.length > 0) {
+                  setPreviewImage({
+                    src: `/images/folder_${index}/${matchingVideos[0]}`,
+                    type: 'video'
+                  });
+                } else {
+                  console.warn(`No matching video found for project ${index}, media ${mediaIndex}`);
+                }
+              } else {
+                // Find the actual image file that matches this index
+                const matchingImages = folderMedia.images?.filter(filename => 
+                  filename.startsWith(`${mediaIndex}-min.`) || filename === `${mediaIndex}.jpg` || filename === `${mediaIndex}.png`
+                );
+                
+                if (matchingImages && matchingImages.length > 0) {
+                  setPreviewImage({
+                    src: `/images/folder_${index}/${matchingImages[0]}`,
+                    type: 'image'
+                  });
+                } else {
+                  console.warn(`No matching image found for project ${index}, media ${mediaIndex}`);
+                }
+              }
+            } else {
+              // Fallback to original behavior if media map is not available
+              setPreviewImage({
+                src: isVideo ?
+                  `/images/folder_${index}/${mediaIndex}-min.mp4` :
+                  `/images/folder_${index}/${mediaIndex}-min.jpg`,
+                type: isVideo ? 'video' : 'image'
+              });
+            }
           }
         }
       });
@@ -219,8 +256,124 @@ useEffect(() => {
     };
   }, []);
 
+  // Import useEffect at the top of the file (already there)
+  
+  // Add this state to track if media map is loaded
+  const [mediaMapLoaded, setMediaMapLoaded] = useState(false);
+  
+  // Add this effect to load the media map
+  useEffect(() => {
+    // Fetch the media map if it's not already in window
+    if (typeof window !== 'undefined' && !window.__mediaMap) {
+      fetch('/mediaMap.json')
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to load media map');
+          return response.json();
+        })
+        .then(data => {
+          window.__mediaMap = data;
+          setMediaMapLoaded(true);
+          console.log('📦 Media map loaded:', data);
+        })
+        .catch(error => {
+          console.error('❌ Error loading media map:', error);
+          // Create empty map as fallback
+          window.__mediaMap = Object.fromEntries(
+            Object.keys(PROJECT_FOLDERS).map(key => [key, { images: [], videos: [] }])
+          );
+          setMediaMapLoaded(true);
+        });
+    } else if (typeof window !== 'undefined' && window.__mediaMap) {
+      setMediaMapLoaded(true);
+    }
+  }, []);
+
   // The function is named getMediaElement
   const getMediaElement = (index, i) => {
+    // Use the media map if available
+    if (typeof window !== 'undefined' && window.__mediaMap) {
+      const mediaMap = window.__mediaMap;
+      const folderMedia = mediaMap[index] || { images: [], videos: [] };
+      
+      // Find image that matches the pattern for this index
+      const matchingImage = folderMedia.images?.find(filename => 
+        filename.startsWith(`${i}-min.`) || filename === `${i}.jpg` || filename === `${i}.png`
+      );
+      
+      // Find video that matches the pattern for this index
+      const matchingVideo = folderMedia.videos?.find(filename => 
+        filename.startsWith(`${i}-min.`) || filename === `${i}.mp4`
+      );
+      
+      // If neither exists, return a placeholder
+      if (!matchingImage && !matchingVideo) {
+        console.warn(`No media found for project ${index}, item ${i}`);
+        return (
+          <div 
+            key={`placeholder-${index}-${i}`}
+            className="w-full aspect-video bg-gray-100 flex items-center justify-center photo"
+          >
+            <span className="text-gray-400">Media not available</span>
+          </div>
+        );
+      }
+      
+      // Prefer image if available
+      if (matchingImage) {
+        const imagePath = `/images/folder_${index}/${matchingImage}`;
+        return (
+          <Image
+            key={`img-${index}-${i}`}
+            src={imagePath}
+            alt={`Image ${i} from project ${index}`}
+            width={1280}
+            priority={index === 0} // Only first image uses priority
+            loading="eager"
+            height={720}
+            className="w-full object-contain photo"
+            style={{ height: 'auto' }}
+            onLoad={onMediaLoad}
+            onError={(e) => {
+              // Fallback to video if image fails and video exists
+              if (matchingVideo) {
+                const videoPath = `/images/folder_${index}/${matchingVideo}`;
+                const video = document.createElement('video');
+                video.src = videoPath;
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                video.className = 'w-full object-contain';
+                video.style.height = 'auto';
+                video.onloadeddata = onMediaLoad;
+
+                if (e.target.parentNode) {
+                  e.target.parentNode.replaceChild(video, e.target);
+                }
+              }
+            }}
+          />
+        );
+      } else if (matchingVideo) {
+        // Use video directly if no image is available
+        const videoPath = `/images/folder_${index}/${matchingVideo}`;
+        return (
+          <video
+            key={`video-${index}-${i}`}
+            src={videoPath}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full object-contain photo"
+            style={{ height: 'auto' }}
+            onLoadedData={onMediaLoad}
+          />
+        );
+      }
+    }
+    
+    // Fallback to original behavior if media map is not available
     const imagePath = `/images/folder_${index}/${i}-min.jpg`;
     const videoPath = `/images/folder_${index}/${i}-min.mp4`;
 
