@@ -320,8 +320,8 @@ export default function Home() {
       );
     }
 
-    return null; 
-  }; 
+    return null;
+  };
   const [raisedNumbers, setRaisedNumbers] = useState(new Set());
 
   // project index  animation logic
@@ -354,10 +354,10 @@ export default function Home() {
 
             // If not the first index, animate previous index's numbers back down
             if (index == 1) {
-              const prevNumholdElement = document.querySelector(`.numhold${index-1}`);
+              const prevNumholdElement = document.querySelector(`.numhold${index - 1}`);
               if (prevNumholdElement) {
                 // Mark previous index as raised too
-                setRaisedNumbers(prev => new Set([...prev, index-1]));
+                setRaisedNumbers(prev => new Set([...prev, index - 1]));
                 gsap.to(prevNumholdElement.children, {
                   y: '-10dvh',
                   duration: 0.4,
@@ -367,10 +367,10 @@ export default function Home() {
               }
             }
             else if (index > 1) {
-              const prevNumholdElement = document.querySelector(`.numhold${index-1}`);
+              const prevNumholdElement = document.querySelector(`.numhold${index - 1}`);
               if (prevNumholdElement) {
                 // Mark previous index as raised too
-                setRaisedNumbers(prev => new Set([...prev, index-1]));
+                setRaisedNumbers(prev => new Set([...prev, index - 1]));
                 gsap.to(prevNumholdElement.children, {
                   y: '-20dvh',
                   duration: 0.4,
@@ -391,7 +391,7 @@ export default function Home() {
             });
           }
         }
-        else if(elementPositionDVH >= 40 && elementPositionDVH <= 48 && scrollDirection === -1) {
+        else if (elementPositionDVH >= 40 && elementPositionDVH <= 48 && scrollDirection === -1) {
           if (numholdElement) {
             const numbers = numholdElement.children;
 
@@ -412,7 +412,7 @@ export default function Home() {
               });
 
               // Remove raised flag for next index and reset its numbers
-              const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
+              const nextNumholdElement = document.querySelector(`.numhold${index + 1}`);
               if (nextNumholdElement) {
                 setRaisedNumbers(prev => {
                   const next = new Set(prev);
@@ -443,7 +443,7 @@ export default function Home() {
               });
 
               // Remove raised flag for next index and reset its numbers
-              const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
+              const nextNumholdElement = document.querySelector(`.numhold${index + 1}`);
               if (nextNumholdElement) {
                 setRaisedNumbers(prev => {
                   const next = new Set(prev);
@@ -485,6 +485,29 @@ export default function Home() {
     setTimeout(() => {
       const mediaItems = gsap.utils.toArray('.photo');
       const projectTitles = gsap.utils.toArray('h2.small-text');
+      const fadeIn = gsap.utils.toArray('.fadeIn');
+      const slidingElements = gsap.utils.toArray('.slidingElement');
+      const slidingChildren = [];
+
+      const slidingIndex = gsap.utils.toArray('.slidingIndex');
+      const slidingIndexChildren = [];
+
+      slidingElements.forEach(el => {
+        const children = el.children;
+        Array.from(children).forEach(child => {
+          child.style.display = 'inline-block';
+          slidingChildren.push(child);
+        });
+      });
+
+      slidingIndex.forEach(el => {
+        const children = el.children;
+        Array.from(children).forEach(child => {
+          child.style.display = 'inline-block';
+          slidingIndexChildren.push(child);
+        });
+      });
+
 
       if (!mediaItems.length) {
         console.warn('🚫 No media items found even after delay');
@@ -493,21 +516,73 @@ export default function Home() {
 
       // Entry animation – slide in from below
       console.log('🎬 Starting entry animation');
-      gsap.fromTo(
-        mediaItems,
-        { y: '100vh', autoAlpha: 0 },
-        {
-          y: 0,
-          autoAlpha: 1,
-          duration: ANIMATION_DURATION.xlong,
-          ease: 'power2.out',
-          stagger: 0.03
-        }
-      );
+      const entryTimeline = gsap.timeline();
 
+      entryTimeline
+        .fromTo(
+          mediaItems,
+          { y: '50dvh', autoAlpha: 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: ANIMATION_DURATION.xlong,
+            ease: 'power2.out'
+          }
+        )
+        .fromTo(
+          fadeIn,
+          { autoAlpha: 0 },
+          {
+            autoAlpha: 1,
+            duration: ANIMATION_DURATION.xlong,
+            ease: 'power2.out',
+          },
+          "<"
+        )
+        .fromTo(
+          slidingChildren,
+          { y: '100%' },
+          {
+            y: 0,
+            duration: ANIMATION_DURATION.xlong,
+            ease: 'power2.out',
+            stagger: 0.2
+          },
+          "<"
+        )
+        .fromTo(
+          slidingElements,
+          { autoAlpha: 0 },
+          {
+            autoAlpha: 1,
+            duration: 0,
+          },
+          "<"
+        )
+       .fromTo(
+          slidingIndexChildren,
+          { y: '100%' },
+          {
+            y: 0,
+            duration: ANIMATION_DURATION.xlong,
+            ease: 'power2.out',
+            stagger: 0.2
+          },
+          "<"
+        )
+       .fromTo(
+          slidingIndex,
+          { autoAlpha: 0 },
+          {
+            autoAlpha: 1,
+            duration: 0,    
+          },
+          "<"
+        );
+       
 
       timeline.add(
-        gsap.to(mediaItems, {
+        gsap.to([mediaItems, fadeIn], {
           opacity: 0,
           duration: ANIMATION_DURATION.short,
           ease: 'power1.out'
@@ -520,12 +595,22 @@ export default function Home() {
           duration: ANIMATION_DURATION.short,
           ease: 'power1.out'
         }),
-        "<" // Start at the same time as the previous animation
+        "<"
+      )
+      timeline.add(
+        gsap.to(slidingChildren,
+          {
+            y: '-100%',
+            duration: ANIMATION_DURATION.short,
+            ease: 'power2.out',
+          }
+        ),
+        "<"
       );
     }, 1);
   }, {
     scope: container,
-    dependencies: [mediaMapLoaded], // Add mediaMapLoaded as a dependency
+    dependencies: [mediaMapLoaded],
   });
 
   return (
@@ -601,7 +686,7 @@ export default function Home() {
         <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div>
 
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
-          <div className="w-full h-full flex items-end justify-end">
+          <div className="w-full h-full flex items-end fadeIn justify-end">
             {previewImage?.type === 'video' ? (
               <video
                 src={previewImage.src}
@@ -626,16 +711,26 @@ export default function Home() {
         </div>
 
         <div className="small-text pointer-events-auto flex justify-between" style={{ gridColumn: '9 / span 8' }}>
-          <span className="overflow-hidden">
-            <p id="description">{PROJECT_DESCRIPTIONS[descriptionIndex]}</p>
+          <span className="overflow-hidden h-[1.6rem] slidingElement">
+            <p id="description" className="inline-block">
+              {PROJECT_DESCRIPTIONS[descriptionIndex]}
+            </p>
           </span>
           {PROJECT_LINKS[descriptionIndex] && (
-            <span className="overflow-hidden">
+            <span
+              className="overflow-hidden slidingElement h-[1.6rem]"
+              style={{
+                visibility: PROJECT_LINKS[descriptionIndex] ? 'visible' : 'hidden'
+              }}
+            >
               <a
-                href={PROJECT_LINKS[descriptionIndex]}
+                href={PROJECT_LINKS[descriptionIndex] || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center group"
+                style={{
+                  pointerEvents: PROJECT_LINKS[descriptionIndex] ? 'auto' : 'none',
+                }}
               >
                 Visit
                 <span className="svg-wrapper ml-2 relative my-[1px] w-[10px] h-[10px] overflow-hidden inline-block">
@@ -651,8 +746,7 @@ export default function Home() {
                   </span>
                 </span>
               </a>
-            </span>
-          )}
+            </span>)}
         </div>
       </div>
 
@@ -690,7 +784,7 @@ export default function Home() {
             >
               {/* Numbers container */}
               <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
-                <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
+                <div className={`sticky number-text numhold${index} ${index === 0 ? 'slidingIndex overflow-hidden' : ''} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
                   <span className="number1 inline-block">0</span>
                   <span className="number2 inline-block">{index + 1}</span>
                 </div>

@@ -40,6 +40,18 @@
     }
 }
 
+.fadeIn{
+    visibility: hidden;
+}
+
+.slidingElement{
+    visibility: hidden;
+}
+
+.slidingIndex{
+    visibility: hidden;
+}
+
 html {
     font-size: calc((100vw / var(--size)) * 10);
     overflow-x: hidden;

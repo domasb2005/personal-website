@@ -105,12 +105,10 @@ export default function Index() {
       gsap.to(h2.element, {
         x: dx,
         y: dy,
-        // Remove the text property as it doesn't work this way
         duration: ANIMATION_DURATION.long,
         ease: 'power2.inOut',
         delay: index * 0.1,
         onStart: function() {
-          // Directly modify the className to change text alignment
           if (h2.element.classList.contains('text-right')) {
             h2.element.classList.remove('text-right');
             h2.element.classList.add('text-left');
@@ -258,10 +256,9 @@ export default function Index() {
 
     gsap.fromTo(
       targets,
-      { y: '100%', opacity: 0 },
+      { y: '100%'},
       {
         y: '0%',
-        opacity: 1,
         duration: ANIMATION_DURATION.long,
         ease: 'power4.out',
         stagger: ANIMATION_DURATION.long / targets.length,
@@ -343,11 +340,11 @@ export default function Index() {
 <div className="small-text absolute bottom-[2rem] left-[2rem] overflow-hidden slidingChildren">
             <span>domas.berulis@gmail.com</span>
           </div>
-          <div className='small-text opacity-[0.32] absolute bottom-[2rem] right-[2rem] overflow-hidden slidingChildren'>
-            <a href='https://www.linkedin.com/in/domas-berulis-8127b41b9/'>Linked in,</a>{' '}
+          <div className='small-text absolute bottom-[2rem] right-[2rem] overflow-hidden slidingChildren'>
+            <a href='https://www.linkedin.com/in/domas-berulis-8127b41b9/' className="opacity-[0.32] hover:opacity-[1] transition-opacity">Linked in,</a>{' '}
             <span></span>
-            <a href='https://github.com/domasb2005'>Git, </a>{' '}
-            <a href='https://x.com/Domas04641249'>X</a>
+            <a href='https://github.com/domasb2005' className="opacity-[0.32] hover:opacity-[1] transition-opacity">Git, </a>{' '}
+            <a className='opacity-[0.32] hover:opacity-[1]' href='https://x.com/Domas04641249'>X</a>
           </div>
 
 
@@ -366,8 +363,8 @@ export default function Index() {
 
           {/* Content spanning from column 6 to 16 */}
           <div className="col-start-6 col-span-11 relative w-full">
-          <div className="small-text uppercase overflow-hidden slidingChildren opacity-[0.32] pb-[1rem]">
-            <h2>Projects</h2>
+          <div className="small-text uppercase opacity-[0.32] pb-[1rem]">
+            <div className='overflow-hidden slidingChildren'><h2>Projects</h2></div>
           </div>
             {/* H2s are absolutely positioned inside this wrapper */}
             <div className="absolute top-[2.6rem] left-0 w-full whitespace-nowrap text-left">
