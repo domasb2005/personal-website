@@ -10,13 +10,16 @@ export default function App({ Component, pageProps, router}) {
 
   return (
     <>
-      {isLoading && <LoadingScreen onLoadComplete={() => setIsLoading(false)} />}
-      <TransitionProvider>
-        <Header />
-        <Transition>
-          <Component key={router.route} {...pageProps} />
-        </Transition>
-      </TransitionProvider>
+      {isLoading ? (
+        <LoadingScreen onLoadComplete={() => setIsLoading(false)} />
+      ) : (
+        <TransitionProvider>
+          <Header />
+          <Transition>
+            <Component key={router.route} {...pageProps} />
+          </Transition>
+        </TransitionProvider>
+      )}
     </>
   );
 }

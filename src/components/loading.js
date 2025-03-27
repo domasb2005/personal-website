@@ -17,15 +17,18 @@ export default function LoadingScreen({ onLoadComplete }) {
   const router = useRouter();
 
   useEffect(() => {
-    // First, fetch the media map
+    console.log('🚀 Loading screen mounted');
+
     const fetchMediaMap = async () => {
+      console.log('📡 Fetching media map...');
       try {
         const response = await fetch('/mediaMap.json');
         if (!response.ok) throw new Error('Failed to load media map');
-        return await response.json();
+        const data = await response.json();
+        console.log('✅ Media map fetched successfully:', data);
+        return data;
       } catch (error) {
-        console.error('Error loading media map:', error);
-        // Return empty map as fallback
+        console.error('❌ Error loading media map:', error);
         return Object.fromEntries(
           Object.keys(PROJECT_FOLDERS).map(key => [key, { images: [], videos: [] }])
         );
@@ -45,9 +48,11 @@ export default function LoadingScreen({ onLoadComplete }) {
           canvas.width = img.width;
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL()); // Cache in memory
+          resolve(canvas.toDataURL());
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+          resolve(null);
+        }
       });
     };
 
@@ -60,24 +65,25 @@ export default function LoadingScreen({ onLoadComplete }) {
         video.src = url;
         
         video.onloadeddata = () => {
-          // Force video preload
           video.play().then(() => {
             video.pause();
             video.currentTime = 0;
             resolve(true);
-          }).catch(() => resolve(false));
+          }).catch((error) => {
+            resolve(false);
+          });
         };
         
-        video.onerror = () => resolve(false);
+        video.onerror = () => {
+          resolve(false);
+        }
       });
     };
 
     const loadAssets = async () => {
-      // Get the media map
+      console.log('🎬 Starting asset loading process');
       const map = await fetchMediaMap();
       setMediaMap(map);
-      
-      // Store the map for use in other components
       window.__mediaMap = map;
       
       const promises = [];
@@ -85,52 +91,59 @@ export default function LoadingScreen({ onLoadComplete }) {
       let totalAssets = 0;
       let loaded = 0;
       
-      // Count total assets to load
       Object.entries(map).forEach(([folderIndex, { images, videos }]) => {
         totalAssets += images.length + videos.length;
       });
       
-      // If no assets found, complete loading
+      console.log(`📊 Total assets to load: ${totalAssets}`);
+      
       if (totalAssets === 0) {
-        console.warn('No media assets found in the map');
+        console.warn('⚠️ No media assets found in the map');
         onLoadComplete();
         return;
       }
       
-      // Preload all available assets
       Object.entries(map).forEach(([folderIndex, { images, videos }]) => {
-        // Preload images
+        
         images.forEach(filename => {
           const imageUrl = `/images/folder_${folderIndex}/${filename}`;
           promises.push(
             preloadImage(imageUrl).then((dataUrl) => {
               if (dataUrl) cache[imageUrl] = dataUrl;
               loaded++;
-              setProgress((loaded / totalAssets) * 100);
+              const currentProgress = (loaded / totalAssets) * 100;
+              setProgress(currentProgress);
               setAssetsLoaded(loaded);
             })
           );
         });
         
-        // Preload videos
         videos.forEach(filename => {
           const videoUrl = `/images/folder_${folderIndex}/${filename}`;
           promises.push(
             preloadVideo(videoUrl).then((success) => {
               loaded++;
-              setProgress((loaded / totalAssets) * 100);
+              const currentProgress = (loaded / totalAssets) * 100;
+              setProgress(currentProgress);
               setAssetsLoaded(loaded);
             })
           );
         });
       });
 
+      console.log('⏳ Waiting for all assets to load...');
       await Promise.all(promises);
       window.__assetCache = cache;
+      console.log('🎉 All assets loaded successfully!');
+      console.log('💾 Cache size:', Object.keys(cache).length);
       onLoadComplete();
     };
 
     loadAssets();
+    
+    return () => {
+      console.log('🧹 Cleaning up loading screen');
+    };
   }, [onLoadComplete]);
 
   return (

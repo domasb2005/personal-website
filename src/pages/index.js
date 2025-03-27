@@ -54,9 +54,7 @@ export default function Home() {
   const [descriptionIndex, setDescriptionIndex] = useState(0);
 
   const lastScrollY = useRef(0);
-const [scrollDirection, setScrollDirection] = useState(0);
-const digit1Refs = useRef([]);
-const digit2Refs = useRef([]);
+  const [scrollDirection, setScrollDirection] = useState(0);
 
 useEffect(() => {
   const handleScrollDirection = () => {
@@ -290,129 +288,122 @@ useEffect(() => {
 
   // The function is named getMediaElement
   const getMediaElement = (index, i) => {
-    // Use the media map if available
-    if (typeof window !== 'undefined' && window.__mediaMap) {
-      const mediaMap = window.__mediaMap;
-      const folderMedia = mediaMap[index] || { images: [], videos: [] };
-      
-      // Find image that matches the pattern for this index
-      const matchingImage = folderMedia.images?.find(filename => 
-        filename.startsWith(`${i}-min.`) || filename === `${i}.jpg` || filename === `${i}.png`
-      );
-      
-      // Find video that matches the pattern for this index
-      const matchingVideo = folderMedia.videos?.find(filename => 
-        filename.startsWith(`${i}-min.`) || filename === `${i}.mp4`
-      );
-      
-      // If neither exists, return a placeholder
-      if (!matchingImage && !matchingVideo) {
-        console.warn(`No media found for project ${index}, item ${i}`);
-        return (
-          <div 
-            key={`placeholder-${index}-${i}`}
-            className="w-full aspect-video bg-gray-100 flex items-center justify-center photo"
-          >
-            <span className="text-gray-400">Media not available</span>
-          </div>
-        );
-      }
-      
-      // Prefer image if available
-      if (matchingImage) {
-        const imagePath = `/images/folder_${index}/${matchingImage}`;
-        return (
-          <Image
-            key={`img-${index}-${i}`}
-            src={imagePath}
-            alt={`Image ${i} from project ${index}`}
-            width={1280}
-            priority={index === 0} // Only first image uses priority
-            loading="eager"
-            height={720}
-            className="w-full object-contain photo"
-            style={{ height: 'auto' }}
-            onLoad={onMediaLoad}
-            onError={(e) => {
-              // Fallback to video if image fails and video exists
-              if (matchingVideo) {
-                const videoPath = `/images/folder_${index}/${matchingVideo}`;
-                const video = document.createElement('video');
-                video.src = videoPath;
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = true;
-                video.playsInline = true;
-                video.className = 'w-full object-contain';
-                video.style.height = 'auto';
-                video.onloadeddata = onMediaLoad;
-
-                if (e.target.parentNode) {
-                  e.target.parentNode.replaceChild(video, e.target);
-                }
-              }
-            }}
-          />
-        );
-      } else if (matchingVideo) {
-        // Use video directly if no image is available
-        const videoPath = `/images/folder_${index}/${matchingVideo}`;
-        return (
-          <video
-            key={`video-${index}-${i}`}
-            src={videoPath}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full object-contain photo"
-            style={{ height: 'auto' }}
-            onLoadedData={onMediaLoad}
-          />
-        );
-      }
-    }
-    
-    // Fallback to original behavior if media map is not available
-    const imagePath = `/images/folder_${index}/${i}-min.jpg`;
-    const videoPath = `/images/folder_${index}/${i}-min.mp4`;
-
-    return (
-      <Image
-        key={`img-${index}-${i}`}
-        src={imagePath}
-        alt={`Image ${i} from project ${index}`}
-        width={1280}
-        priority={index === 0} // Only first image uses priority
-        loading="eager"
-        height={720}
-        className="w-full object-contain photo"
-        style={{ height: 'auto' }}
-        onLoad={onMediaLoad}
-        onError={(e) => {
-          const video = document.createElement('video');
-          video.src = videoPath;
-          video.autoplay = true;
-          video.loop = true;
-          video.muted = true;
-          video.playsInline = true;
-          video.className = 'w-full object-contain';
-          video.style.height = 'auto';
-          video.onloadeddata = onMediaLoad;
-
-          if (e.target.parentNode) {
-            e.target.parentNode.replaceChild(video, e.target);
-          }
-        }}
-      />
-    );
-  };
-
+    if (typeof window === 'undefined' || !window.__mediaMap) return null;
   
+    const mediaMap = window.__mediaMap;
+    const folderMedia = mediaMap[index] || { images: [], videos: [] };
+  
+    const matchingImage = folderMedia.images.find(filename =>
+      filename.startsWith(`${i}-min.`) || filename === `${i}.jpg` || filename === `${i}.png`
+    );
+  
+    const matchingVideo = folderMedia.videos.find(filename =>
+      filename.startsWith(`${i}-min.`) || filename === `${i}.mp4`
+    );
+  
+    if (matchingVideo) {
+      return (
+        <video
+          key={`video-${index}-${i}`}
+          src={`/images/folder_${index}/${matchingVideo}`}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full object-contain photo"
+          style={{ height: 'auto' }}
+          onLoadedData={onMediaLoad}
+        />
+      );
+    }
+  
+    if (matchingImage) {
+      return (
+        <Image
+          key={`img-${index}-${i}`}
+          src={`/images/folder_${index}/${matchingImage}`}
+          alt={`Image ${i} from project ${index}`}
+          width={1280}
+          height={720}
+          priority={index === 0}
+          loading="eager"
+          className="w-full object-contain photo"
+          style={{ height: 'auto' }}
+          onLoad={onMediaLoad}
+        />
+      );
+    }
+  
+    return null; // Strict: don't return anything if it's not in the map
+  };  // Add this useEffect for the number animation
+  // Add this state at the top of your component with other states
+  const [raisedNumbers, setRaisedNumbers] = useState(new Set());
+  
+  // Modify the animation logic
+  useEffect(() => {
+    const handleNumberAnimation = () => {
+      const numberElements = document.querySelectorAll('.number-text');
+      
+      numberElements.forEach((el, index) => {
+        // Skip if already animated
+        if (raisedNumbers.has(index)) {
+          console.log(`⏭️ Skipping animation for ${index} - already raised`);
+          return;
+        }
+  
+        const rect = el.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const elementPositionDVH = (rect.top / viewportHeight) * 100;
+        
+        const numholdElement = document.querySelector(`.numhold${index}`);
+        const firstNumber = numholdElement?.querySelector('.number1');
+        const secondNumber = numholdElement?.querySelector('.number2');
+  
+        if (elementPositionDVH >= 58 && elementPositionDVH <= 62 && scrollDirection === 1) {
+          console.log(`🎬 Attempting animation UP for element ${index}`);
+          if (firstNumber && secondNumber) {
+            // Mark this index as raised before starting animation
+            setRaisedNumbers(prev => new Set([...prev, index]));
+            
+            gsap.to(firstNumber, {
+              y: '-10dvh',
+              duration: 0.4,
+              ease: 'power2.out',
+              onStart: () => console.log(`✨ Started first number animation for ${index}`),
+              onComplete: () => console.log(`✅ Completed first number animation for ${index}`),
+            });
+      
+            gsap.to(secondNumber, {
+              y: '-10dvh',
+              duration: 0.4,
+              delay: 0.1,
+              ease: 'power2.out',
+              onStart: () => console.log(`✨ Started second number animation for ${index}`),
+              onComplete: () => console.log(`✅ Completed second number animation for ${index}`),
+            });
+          }
+        }
+      });
+    };
+  
+    window.addEventListener('scroll', handleNumberAnimation);
+    return () => window.removeEventListener('scroll', handleNumberAnimation);
+  }, [scrollDirection, raisedNumbers]); // Add raisedNumbers to dependencies
+
 
   
 
   useGSAP(() => {
+    console.log('🎭 useGSAP triggered', {
+      mediaMapLoaded,
+      timelineExists: !!timeline,
+      containerExists: !!container.current
+    });
+
+    if (!mediaMapLoaded) {
+      console.log('⏳ Media map not loaded yet, skipping animation');
+      return;
+    }
 
     setTimeout(() => {
       const mediaItems = gsap.utils.toArray('.photo');
@@ -424,6 +415,7 @@ useEffect(() => {
       }
 
       // Entry animation – slide in from below
+      console.log('🎬 Starting entry animation');
       gsap.fromTo(
         mediaItems,
         { y: '100vh', autoAlpha: 0 },
@@ -445,7 +437,6 @@ useEffect(() => {
         })
       );
 
-      // Also add project titles to exit animation
       timeline.add(
         gsap.to(projectTitles, {
           opacity: 1,
@@ -455,7 +446,10 @@ useEffect(() => {
         "<" // Start at the same time as the previous animation
       );
     }, 1);
-  }, { scope: container });
+  }, { 
+    scope: container,
+    dependencies: [mediaMapLoaded], // Add mediaMapLoaded as a dependency
+  });
 
   return (
     <>
@@ -584,7 +578,7 @@ useEffect(() => {
       </div>
   
       {/* MAIN SCROLLABLE SECTION */}
-      <div className="mt-[calc(45dvh-2rem)]">
+      <div className="mt-[calc(45dvh-2rem)] z-[60]">
         {/* Mobile Version */}
         <div className="w-[100dvw] p-[2rem] grid md:hidden gap-y-[10dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
           {[...Array(PROJECT_COUNT)].map((_, index) => (
@@ -617,11 +611,9 @@ useEffect(() => {
           >
             {/* Numbers container */}
             <div className="col-span-2 min-h-[30dvh]"> {/* Increased height to ensure sticky behavior */}
-              <div className={`sticky ${index === 0 ? 'top-[45dvh]' : 'top-[45dvh]'}`}>
-                <div className="number-text">
-                  <span className="number1" ref={el => digit1Refs.current[index] = el}>0</span>
-                  <span className="number2" ref={el => digit2Refs.current[index] = el}>{index + 1}</span>
-                </div>
+              <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh]' : 'top-[55dvh]'}`}>
+                  <span className="number1 inline-block">0</span>
+                  <span className="number2 inline-block">{index + 1}</span>
               </div>
             </div>
 
@@ -641,3 +633,4 @@ useEffect(() => {
     </>
   );
 }
+
