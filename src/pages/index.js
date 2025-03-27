@@ -346,10 +346,7 @@ useEffect(() => {
       
       numberElements.forEach((el, index) => {
         // Skip if already animated
-        if (raisedNumbers.has(index)) {
-          console.log(`⏭️ Skipping animation for ${index} - already raised`);
-          return;
-        }
+
   
         const rect = el.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
@@ -359,28 +356,125 @@ useEffect(() => {
         const firstNumber = numholdElement?.querySelector('.number1');
         const secondNumber = numholdElement?.querySelector('.number2');
   
-        if (elementPositionDVH >= 58 && elementPositionDVH <= 62 && scrollDirection === 1) {
+        if (elementPositionDVH >= 50 && elementPositionDVH <= 55 && scrollDirection === 1) {
+          if (raisedNumbers.has(index)) {
+            console.log(`⏭️ Skipping animation for ${index} - already raised`);
+            return;
+          }
           console.log(`🎬 Attempting animation UP for element ${index}`);
-          if (firstNumber && secondNumber) {
-            // Mark this index as raised before starting animation
+          if (numholdElement) {
+            // Mark current index as raised
             setRaisedNumbers(prev => new Set([...prev, index]));
             
-            gsap.to(firstNumber, {
+            // Get all children of the current numhold element
+            const numbers = numholdElement.children;
+            
+            // If not the first index, animate previous index's numbers back down
+            if (index == 1) {
+              const prevNumholdElement = document.querySelector(`.numhold${index-1}`);
+              if (prevNumholdElement) {
+                // Mark previous index as raised too
+                setRaisedNumbers(prev => new Set([...prev, index-1]));
+                gsap.to(prevNumholdElement.children, {
+                  y: '-10dvh',
+                  duration: 0.4,
+                  ease: 'power2.out',
+                  stagger: 0.1,
+                });
+              }
+            }
+            else if (index > 1) {
+              const prevNumholdElement = document.querySelector(`.numhold${index-1}`);
+              if (prevNumholdElement) {
+                // Mark previous index as raised too
+                setRaisedNumbers(prev => new Set([...prev, index-1]));
+                gsap.to(prevNumholdElement.children, {
+                  y: '-20dvh',
+                  duration: 0.4,
+                  ease: 'power2.out',
+                  stagger: 0.1,
+                })
+              }
+            }
+            
+            // Animate current index numbers up
+            gsap.to(numbers, {
               y: '-10dvh',
               duration: 0.4,
               ease: 'power2.out',
-              onStart: () => console.log(`✨ Started first number animation for ${index}`),
-              onComplete: () => console.log(`✅ Completed first number animation for ${index}`),
+              stagger: 0.1,
+              onStart: () => console.log(`✨ Started number animation for ${index}`),
+              onComplete: () => console.log(`✅ Completed number animation for ${index}`),
             });
-      
-            gsap.to(secondNumber, {
-              y: '-10dvh',
-              duration: 0.4,
-              delay: 0.1,
-              ease: 'power2.out',
-              onStart: () => console.log(`✨ Started second number animation for ${index}`),
-              onComplete: () => console.log(`✅ Completed second number animation for ${index}`),
-            });
+          }
+        }
+        else if(elementPositionDVH >= 40 && elementPositionDVH <= 45 && scrollDirection === -1) {
+          if (numholdElement) {
+            const numbers = numholdElement.children;
+            
+            if (index === 0) {
+              // Remove raised flag for current index
+              setRaisedNumbers(prev => {
+                const next = new Set(prev);
+                next.delete(index);
+                return next;
+              });
+              
+              // Reset current numbers
+              gsap.to(numbers, {
+                y: '0',
+                duration: 0.4,
+                ease: 'power2.out',
+                stagger: 0.1,
+              });
+              
+              // Remove raised flag for next index and reset its numbers
+              const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
+              if (nextNumholdElement) {
+                setRaisedNumbers(prev => {
+                  const next = new Set(prev);
+                  next.delete(index + 1);
+                  return next;
+                });
+                gsap.to(nextNumholdElement.children, {
+                  y: '0',
+                  duration: 0.4,
+                  ease: 'power2.out',
+                  stagger: 0.1,
+                });
+              }
+            } else {
+              // Remove raised flag for current index
+              setRaisedNumbers(prev => {
+                const next = new Set(prev);
+                next.delete(index);
+                return next;
+              });
+              
+              // Move current numbers to first level
+              gsap.to(numbers, {
+                y: '-10dvh',
+                duration: 0.4,
+                ease: 'power2.out',
+                stagger: 0.1,
+              });
+              
+              // Remove raised flag for next index and reset its numbers
+              const nextNumholdElement = document.querySelector(`.numhold${index+1}`);
+              if (nextNumholdElement) {
+                setRaisedNumbers(prev => {
+                  const next = new Set(prev);
+                  next.delete(index + 1);
+                  return next;
+                });
+                gsap.to(nextNumholdElement.children, {
+                  y: '0',
+                  duration: 0.4,
+                  ease: 'power2.out',
+                  stagger: 0.1,
+                });
+              }
+            }
           }
         }
       });
@@ -521,6 +615,8 @@ useEffect(() => {
   
       {/* FIXED OVERLAY - Preview + Description */}
       <div className="hidden md:grid pointer-events-none fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div>
+              
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
           <div className="w-full h-full flex items-end justify-end">
             {previewImage?.type === 'video' ? (
@@ -598,7 +694,7 @@ useEffect(() => {
         </div>
   
         {/* Desktop Version */}
-        <div className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[10dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
+        <div className="w-[100dvw] hidden md:grid p-[2rem] gap-y-[5dvh] gap-x-4" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
         {[...Array(PROJECT_COUNT)].map((_, index) => (
           <div
             key={index}
@@ -610,8 +706,8 @@ useEffect(() => {
             }}
           >
             {/* Numbers container */}
-            <div className="col-span-2 min-h-[30dvh]"> {/* Increased height to ensure sticky behavior */}
-              <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh]' : 'top-[55dvh]'}`}>
+            <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
+              <div className={`sticky number-text numhold${index} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
                   <span className="number1 inline-block">0</span>
                   <span className="number2 inline-block">{index + 1}</span>
               </div>
