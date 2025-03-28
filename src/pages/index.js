@@ -38,6 +38,18 @@ const PROJECT_LINKS = [
   null
 ];
 
+// Add these constants at the top of the file, after your existing constants
+const SCROLL_THRESHOLDS = {
+  UP: {
+    MIN: 42.6,
+    MAX: 45
+  },
+  DOWN: {
+    MIN: 50,
+    MAX: 55.6
+  }
+};
+
 export default function Home() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
@@ -330,16 +342,13 @@ export default function Home() {
       const numberElements = document.querySelectorAll('.number-text');
 
       numberElements.forEach((el, index) => {
-        // Skip if already animated
-
-
         const rect = el.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = window.visualViewport.height;
         const elementPositionDVH = (rect.top / viewportHeight) * 100;
 
         const numholdElement = document.querySelector(`.numhold${index}`);
 
-        if (elementPositionDVH >= 50 && elementPositionDVH <= 55 && scrollDirection === 1) {
+        if (elementPositionDVH >= SCROLL_THRESHOLDS.DOWN.MIN && elementPositionDVH <= SCROLL_THRESHOLDS.DOWN.MAX && scrollDirection === 1) {
           if (raisedNumbers.has(index)) {
             // console.log(`⏭️ Skipping animation for ${index} - already raised`);
             return;
@@ -389,9 +398,15 @@ export default function Home() {
               onStart: () => console.log(`✨ Started number animation for ${index}`),
               onComplete: () => console.log(`✅ Completed number animation for ${index}`),
             });
+
+            // gsap.to(numholdElement, {
+            //   y: '-10dvh',
+            //   duration: 0.4,
+            //   ease: 'power2.out',
+            // })
           }
         }
-        else if (elementPositionDVH >= 40 && elementPositionDVH <= 48 && scrollDirection === -1) {
+        else if (elementPositionDVH >= SCROLL_THRESHOLDS.UP.MIN && elementPositionDVH <= SCROLL_THRESHOLDS.UP.MAX && scrollDirection === -1) {
           if (numholdElement) {
             const numbers = numholdElement.children;
 
@@ -683,7 +698,7 @@ export default function Home() {
 
       {/* FIXED OVERLAY - Preview + Description */}
       <div className="hidden md:grid pointer-events-none fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-        <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div>
+        {/* <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div> */}
 
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
           <div className="w-full h-full flex items-end fadeIn justify-end">
@@ -733,14 +748,14 @@ export default function Home() {
                 }}
               >
                 Visit
-                <span className="svg-wrapper ml-2 relative my-[1px] w-[10px] h-[10px] overflow-hidden inline-block">
+                <span className="svg-wrapper ml-2 relative my-[1px] overflow-hidden inline-block">
                   <span className="block w-full transition-transform duration-500 ease-out delay-100 group-hover:translate-x-full group-hover:-translate-y-full group-hover:delay-0">
-                    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="1rem" height="1rem" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
                     </svg>
                   </span>
                   <span className="absolute block top-0 left-0 w-full -translate-x-full translate-y-full transition-transform duration-500 ease-out group-hover:translate-x-0 group-hover:translate-y-0 group-hover:delay-100">
-                    <svg width="10" height="11" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="1rem" height="1rem" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path fillRule="evenodd" clipRule="evenodd" d="M3 0H10V7L7.12208 4.12208L1.06066 10.1835L0 9.12284L6.06142 3.06142L3 0Z" fill="var(--color-black)" />
                     </svg>
                   </span>
@@ -784,7 +799,7 @@ export default function Home() {
             >
               {/* Numbers container */}
               <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
-                <div className={`sticky number-text numhold${index} ${index === 0 ? 'slidingIndex overflow-hidden' : ''} ${index === 0 ? 'top-[45dvh] -mb-[10dvh]' : 'top-[55dvh] -mb-[20dvh]'}`}> {/* border-2 border-black */}
+                <div className={`sticky number-text border-2 border-black numhold${index} ${index === 0 ? 'slidingIndex' : ''} ${index === 1 ? '-mb-[10dvh]' : ''} ${index === 0 ? 'top-[45dvh]' : 'top-[55dvh] -mb-[10dvh]'}`}> {/* border-2 border-black */}
                   <span className="number1 inline-block">0</span>
                   <span className="number2 inline-block">{index + 1}</span>
                 </div>
@@ -803,6 +818,41 @@ export default function Home() {
           <div className="h-[40dvh]" style={{ gridColumn: '1/5' }}></div>
         </div>
       </div>
+
+      {/* === DEBUG SCROLL THRESHOLD LINES === */}
+<div className="fixed top-0 left-0 w-full h-screen pointer-events-none z-[9999]">
+  {[SCROLL_THRESHOLDS.UP.MIN, SCROLL_THRESHOLDS.UP.MAX, SCROLL_THRESHOLDS.DOWN.MIN, SCROLL_THRESHOLDS.DOWN.MAX].map((value, index) => (
+    <div
+      key={index}
+      style={{
+        position: 'absolute',
+        top: `${value}dvh`,
+        left: 0,
+        width: '100%',
+        height: '1px',
+        backgroundColor: ['red', 'red', 'blue', 'blue'][index],
+        opacity: 0.5,
+        zIndex: 9999,
+      }}
+    >
+      {/* Optional label */}
+      <span
+        style={{
+          position: 'absolute',
+          left: 8,
+          top: '-1rem',
+          fontSize: '0.75rem',
+          color: 'white',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          padding: '0.1rem 0.3rem',
+          borderRadius: '2px',
+        }}
+      >
+        y = {value}dvh
+      </span>
+    </div>
+  ))}
+</div>
     </>
   );
 }
