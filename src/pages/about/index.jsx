@@ -53,7 +53,7 @@ export default function Index() {
     temp.style.visibility = 'hidden';
     temp.style.whiteSpace = 'pre-wrap';
 
-    const width = getParagraphPixelWidth(isMobile) * (isMobile ? 0.7 : 0.75);
+    const width = getParagraphPixelWidth(isMobile) * (isMobile ? 0.65 : 0.75);
     temp.style.width = `${width}px`;
     document.body.appendChild(temp);
     console.log('📐 Temporary element setup:', { width, isMobile });
