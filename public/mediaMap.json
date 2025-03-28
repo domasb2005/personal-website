@@ -1,0 +1,66 @@
+{
+  "0": {
+    "images": [
+      "0-min.jpg",
+      "1-min.jpg",
+      "2-min.jpg",
+      "3-min.jpg",
+      "4-min.jpg"
+    ],
+    "videos": []
+  },
+  "1": {
+    "images": [
+      "1-min.jpg"
+    ],
+    "videos": [
+      "0-min.mp4"
+    ]
+  },
+  "2": {
+    "images": [
+      "0-min.jpg",
+      "1-min.jpg",
+      "2-min.jpg",
+      "4-min.jpg",
+      "5-min.jpg"
+    ],
+    "videos": [
+      "3-min.mp4",
+      "6-min.mp4"
+    ]
+  },
+  "3": {
+    "images": [
+      "0-min.jpg",
+      "1-min.jpg",
+      "2-min.jpg",
+      "3-min.jpg"
+    ],
+    "videos": []
+  },
+  "4": {
+    "images": [
+      "0-min.jpg",
+      "1-min.jpg",
+      "2-min.jpg",
+      "3-min.jpg",
+      "4-min.jpg"
+    ],
+    "videos": [
+      "5-min.mp4"
+    ]
+  },
+  "5": {
+    "images": [
+      "0-min.jpg",
+      "1-min.jpg",
+      "2-min.jpg",
+      "4-min.jpg",
+      "5-min.jpg"
+    ],
+    "videos": [
+      "3-min.mp4"
+    ]
+  }
+}
