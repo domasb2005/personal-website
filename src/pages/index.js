@@ -41,8 +41,8 @@ const PROJECT_LINKS = [
 // Add these constants at the top of the file, after your existing constants
 const SCROLL_THRESHOLDS = {
   UP: {
-    MIN: 42.6,
-    MAX: 45
+    MIN: 45,
+    MAX: 50
   },
   DOWN: {
     MIN: 50,
@@ -339,20 +339,34 @@ export default function Home() {
   // project index  animation logic
   useEffect(() => {
     const handleNumberAnimation = () => {
-      const numberElements = document.querySelectorAll('.number-text');
+      // Get all project sections
+      const projectSections = document.querySelectorAll('.projectMediaDesktop');
 
-      numberElements.forEach((el, index) => {
-        const rect = el.getBoundingClientRect();
-        const viewportHeight = window.visualViewport.height;
-        const elementPositionDVH = (rect.top / viewportHeight) * 100;
+      projectSections.forEach((section, index) => {
+        // Get first and last assets of this project
+        const assets = section.querySelectorAll('.photo');
+        if (!assets.length) return;
+
+        const firstAsset = assets[0];
+        const lastAsset = assets[assets.length - 1];
+        
+        const firstRect = firstAsset.getBoundingClientRect();
+        const lastRect = lastAsset.getBoundingClientRect();
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        
+        // Calculate positions in DVH
+        const firstAssetTopDVH = (firstRect.top / viewportHeight) * 100;
+        const lastAssetBottomDVH = (lastRect.bottom / viewportHeight) * 100;
 
         const numholdElement = document.querySelector(`.numhold${index}`);
 
-        if (elementPositionDVH >= SCROLL_THRESHOLDS.DOWN.MIN && elementPositionDVH <= SCROLL_THRESHOLDS.DOWN.MAX && scrollDirection === 1) {
-          if (raisedNumbers.has(index)) {
-            // console.log(`⏭️ Skipping animation for ${index} - already raised`);
-            return;
-          }
+        // Check scroll down condition using first asset's top position
+        if (firstAssetTopDVH >= SCROLL_THRESHOLDS.DOWN.MIN && 
+            firstAssetTopDVH <= SCROLL_THRESHOLDS.DOWN.MAX && 
+            scrollDirection === 1) {
+          if (raisedNumbers.has(index)) return;
+          
+          // Rest of your existing animation code for scrolling down
           console.log(`🎬 Attempting animation UP for element ${index}`);
           if (numholdElement) {
             // Mark current index as raised
@@ -406,7 +420,10 @@ export default function Home() {
             // })
           }
         }
-        else if (elementPositionDVH >= SCROLL_THRESHOLDS.UP.MIN && elementPositionDVH <= SCROLL_THRESHOLDS.UP.MAX && scrollDirection === -1) {
+        // Check scroll up condition using last asset's bottom position
+        else if (lastAssetBottomDVH >= SCROLL_THRESHOLDS.UP.MIN && 
+                 lastAssetBottomDVH <= SCROLL_THRESHOLDS.UP.MAX && 
+                 scrollDirection === -1) {
           if (numholdElement) {
             const numbers = numholdElement.children;
 
@@ -480,7 +497,7 @@ export default function Home() {
 
     window.addEventListener('scroll', handleNumberAnimation);
     return () => window.removeEventListener('scroll', handleNumberAnimation);
-  }, [scrollDirection, raisedNumbers]); // Add raisedNumbers to dependencies
+  }, [scrollDirection, raisedNumbers]);
 
 
 
@@ -698,7 +715,7 @@ export default function Home() {
 
       {/* FIXED OVERLAY - Preview + Description */}
       <div className="hidden md:grid pointer-events-none fixed top-0 left-0 w-[100dvw] h-[100dvh] p-[2rem] gap-4 z-[5]" style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}>
-        {/* <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div> */}
+        <div className='h-[45dvh] absolute left-0 top-0 bg-[var(--color-white)] w-40 z-[30]' style={{ gridColumn: '1 / span 2' }}></div>
 
         <div className="h-[70dvh] absolute bottom-[2rem] right-[0]" style={{ gridColumn: '9 / span 8' }}>
           <div className="w-full h-full flex items-end fadeIn justify-end">
@@ -791,7 +808,7 @@ export default function Home() {
             <div
               key={index}
               ref={el => sectionRefs.current[index] = el}
-              className="projectMedia h-auto grid gap-4"
+              className="projectMedia projectMediaDesktop h-auto grid gap-4"
               style={{
                 gridColumn: '1 / 5',
                 gridTemplateColumns: 'repeat(4, 1fr)',
@@ -799,7 +816,7 @@ export default function Home() {
             >
               {/* Numbers container */}
               <div className="col-span-2"> {/* Increased height to ensure sticky behavior */}
-                <div className={`sticky number-text border-2 border-black numhold${index} ${index === 0 ? 'slidingIndex' : ''} ${index === 1 ? '-mb-[10dvh]' : ''} ${index === 0 ? 'top-[45dvh]' : 'top-[55dvh] -mb-[10dvh]'}`}> {/* border-2 border-black */}
+                <div className={`sticky number-text numhold${index} ${index === 0 ? 'slidingIndex overflow-hidden' : ''} ${index === 0 ? 'top-[45dvh]' : 'top-[55dvh] -mb-[10dvh]'}`}> {/* border-2 border-black */}
                   <span className="number1 inline-block">0</span>
                   <span className="number2 inline-block">{index + 1}</span>
                 </div>
@@ -820,39 +837,38 @@ export default function Home() {
       </div>
 
       {/* === DEBUG SCROLL THRESHOLD LINES === */}
-<div className="fixed top-0 left-0 w-full h-screen pointer-events-none z-[9999]">
-  {[SCROLL_THRESHOLDS.UP.MIN, SCROLL_THRESHOLDS.UP.MAX, SCROLL_THRESHOLDS.DOWN.MIN, SCROLL_THRESHOLDS.DOWN.MAX].map((value, index) => (
-    <div
-      key={index}
-      style={{
-        position: 'absolute',
-        top: `${value}dvh`,
-        left: 0,
-        width: '100%',
-        height: '1px',
-        backgroundColor: ['red', 'red', 'blue', 'blue'][index],
-        opacity: 0.5,
-        zIndex: 9999,
-      }}
-    >
-      {/* Optional label */}
-      <span
+  {/* <div className="fixed top-0 left-0 w-full h-screen pointer-events-none z-[9999]">
+    {[SCROLL_THRESHOLDS.UP.MIN, SCROLL_THRESHOLDS.UP.MAX, SCROLL_THRESHOLDS.DOWN.MIN, SCROLL_THRESHOLDS.DOWN.MAX].map((value, index) => (
+      <div
+        key={index}
         style={{
           position: 'absolute',
-          left: 8,
-          top: '-1rem',
-          fontSize: '0.75rem',
-          color: 'white',
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          padding: '0.1rem 0.3rem',
-          borderRadius: '2px',
+          top: `${value}dvh`,
+          left: 0,
+          width: '100%',
+          height: '1px',
+          backgroundColor: ['red', 'red', 'blue', 'blue'][index],
+          opacity: 0.5,
+          zIndex: 9999,
         }}
       >
-        y = {value}dvh
-      </span>
-    </div>
-  ))}
-</div>
+        <span
+          style={{
+            position: 'absolute',
+            left: 8,
+            top: '-1rem',
+            fontSize: '0.75rem',
+            color: 'white',
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            padding: '0.1rem 0.3rem',
+            borderRadius: '2px',
+          }}
+        >
+          y = {value}dvh
+        </span>
+      </div>
+    ))}
+  </div> */}
     </>
   );
 }
