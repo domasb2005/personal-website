@@ -12,8 +12,8 @@ export default function Index() {
 
   useGSAP( () => {
     const targets = gsap.utils.toArray(["p", image.current])
-    gsap.fromTo(targets, {scale: 0.85, opacity: 0}, {scale: 1, opacity: 1, stagger: 0.25})
-    timeline.add(gsap.to(container.current, { opacity: 0 }))
+    gsap.fromTo(targets, {scale: 0.85, opacity: 0}, {scale: 1, opacity: 1, stagger: 0.25}) //enter
+    timeline.add(gsap.to(container.current, { opacity: 0 })) //exit
   }, {scope: container})
 
   return (

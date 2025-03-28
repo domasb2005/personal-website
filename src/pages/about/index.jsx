@@ -4,185 +4,64 @@ import { ANIMATION_DURATION } from '@/constants/animation';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-
-
-
 export default function Index() {
   const { timeline } = useContext(TransitionContext);
   const container = useRef(null);
 
   const projectRefs = useRef([]);
   const paragraphRef = useRef(null);
-
   const mobileProjectRefs = useRef([]);
   const mobileParagraphRef = useRef(null);
-  const slidingChildren = useRef(null);
+  const hasAnimated = useRef(false);
 
-
-  const playExitAnimation = () => {
-    const timeline = gsap.timeline();
-  
-    const paragraphLines = container.current?.querySelectorAll('p > span') || [];
-    const slidingChildren = container.current?.querySelectorAll('.slidingChildren > *') || [];
-    const allH2s = [...projectRefs.current, ...mobileProjectRefs.current].filter(Boolean);
-  
-    // Animate paragraph lines
-    timeline.to(paragraphLines, {
-      y: '-100%',
-      opacity: 0,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power4.in',
-      stagger: 0.02,
-    }, 0);
-  
-    // Animate sliding children
-    timeline.to(slidingChildren, {
-      y: '-100%',
-      opacity: 0,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power4.in',
-      stagger: 0.015,
-    }, 0);
-  
-    timeline.to(allH2s, {
-    x: 0,
-    y: 0,
-    duration: ANIMATION_DURATION.short,
-    ease: 'power2.inOut',
-    stagger: ANIMATION_DURATION.short/allH2s.length,
-    onStart: function(i) {
-      // does not work
-      const element = this.targets()[i];
-      if (element && element.classList.contains('text-left')) {
-        element.classList.remove('text-left');
-        element.classList.add('text-right');
-      }
-    }
-  }, 0.1);
-
-    // Set opacity for all H2s except the first one (ALGEBRA)
-    const nonFirstH2s = allH2s.filter((h2, index) => {
-      return h2.textContent !== projectNames[0];
-    });
-    
-    timeline.to(nonFirstH2s, {
-      opacity: 0.32,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power2.inOut',
-    }, 0.2);
-  
-    return timeline;
-  };
   const projectNames = ['ALGEBRA', 'URBANEAR', 'EVENT AI', 'SIMULATOR', 'TESLA COIL', 'CAR GAME'];
 
-  const getProcessedHTML = (text) => {
+  const getProcessedHTML = (text, isMobile) => {
     let html = text;
     projectNames.forEach((name, index) => {
-      const span = `<span class="invisible-placeholder" data-placeholder="${index}">${name}</span>`;
+      const placeholderClass = isMobile ? 'mobile-invisible-placeholder' : 'desktop-invisible-placeholder';
+      const span = `<span class="invisible-placeholder ${placeholderClass}" data-placeholder="${index}">${name}</span>`;
       html = html.replace(name, span);
     });
     return html;
   };
 
-  const animateH2s = (containerRef, h2Refs) => {
-    if (!containerRef || !h2Refs) return;
-    const placeholders = containerRef.querySelectorAll('.invisible-placeholder');
-    const h2Rects = h2Refs.map(h2 => {
-      const rect = h2.getBoundingClientRect();
-      return { element: h2, rect };
-    });
-
-    const lineHeight = parseFloat(window.getComputedStyle(containerRef).lineHeight);
-
-    placeholders.forEach((span, index) => {
-      const spanRect = span.getBoundingClientRect();
-      const h2 = h2Rects[index];
-      if (!h2) return;
-
-      const dx = spanRect.left - h2.rect.left;
-      const dy = (spanRect.top - h2.rect.top) - (1 * lineHeight);
-
-      gsap.to(h2.element, {
-        x: dx,
-        y: dy,
-        duration: ANIMATION_DURATION.long,
-        ease: 'power2.inOut',
-        delay: index * 0.1,
-        onStart: function() {
-          if (h2.element.classList.contains('text-right')) {
-            h2.element.classList.remove('text-right');
-            h2.element.classList.add('text-left');
-          }
-        }
-      });
-    });
-  };
-
-  const animateParagraphLines = (containerRef) => {
-    const lines = Array.from(containerRef.querySelectorAll('p > span'));
-    const staggerTime = ANIMATION_DURATION.long / lines.length;
-
-    gsap.from(lines, {
-      y: '100%',
-      opacity: 0,
-      duration: ANIMATION_DURATION.short,
-      ease: 'power4.out',
-      stagger: staggerTime,
-      delay: ANIMATION_DURATION.short,
-    });
-  };
-
   const getParagraphPixelWidth = (isMobile) => {
     if (isMobile) {
-      // 100dvw - 2rem padding (left + right)
       const vw = window.innerWidth;
-      const padding = 2 * parseFloat(getComputedStyle(document.documentElement).fontSize); // assuming rem = root font size
+      const padding = 2 * parseFloat(getComputedStyle(document.documentElement).fontSize);
       return vw - padding;
     } else {
-      // Desktop: calculate based on grid columns (col-start-6 to col-end-17)
       const grid = document.querySelector('.md\\:grid');
-      if (!grid) return 600; // fallback width
-
+      if (!grid) return 600;
       const columns = grid.querySelectorAll('div.h-full');
-      const startCol = columns[5];  // index 5 = col-start-6
-      const endCol = columns[15];   // index 15 = col-end-16
-
+      const startCol = columns[5];
+      const endCol = columns[15];
       const left = startCol.getBoundingClientRect().left;
       const right = endCol.getBoundingClientRect().right;
-
       return right - left;
     }
   };
 
   const setupParagraph = (ref, originalText) => {
-    const html = getProcessedHTML(originalText);
+    console.log('🔄 Starting paragraph setup for:', ref?.className);
+    const isMobile = window.innerWidth < 768;
+    const html = getProcessedHTML(originalText, isMobile);
     const temp = document.createElement('div');
     temp.innerHTML = html;
     temp.style.position = 'absolute';
     temp.style.visibility = 'hidden';
     temp.style.whiteSpace = 'pre-wrap';
-    const isMobile = window.innerWidth < 768;
-    let width;
-    if (isMobile) {
-      width = getParagraphPixelWidth(isMobile) * 0.70;
-    } else {
-      width = getParagraphPixelWidth(isMobile) * 0.75;
-    }
-    console.log('📐 Paragraph width calculation:', {
-      isMobile,
-      windowWidth: window.innerWidth,
-      calculatedWidth: width,
-      viewportUnit: `${width}px`
-    });
+
+    const width = getParagraphPixelWidth(isMobile) * (isMobile ? 0.7 : 0.75);
     temp.style.width = `${width}px`;
     document.body.appendChild(temp);
+    console.log('📐 Temporary element setup:', { width, isMobile });
 
     const range = document.createRange();
     const lines = [];
     let line = '';
     let lastTop = null;
-
-    console.log('🔍 Starting line detection...');
 
     const walker = document.createTreeWalker(temp, NodeFilter.SHOW_TEXT);
     let node;
@@ -192,18 +71,9 @@ export default function Index() {
         range.setEnd(node, i + 1);
         const rect = range.getBoundingClientRect();
 
-        if (lastTop === null) {
-          lastTop = rect.top;
-          console.log('📏 First line starting at y:', lastTop);
-        }
+        if (lastTop === null) lastTop = rect.top;
 
         if (Math.abs(rect.top - lastTop) > 1) {
-          console.log('📝 Line complete:', {
-            content: line,
-            length: line.length,
-            previousTop: lastTop,
-            newTop: rect.top
-          });
           lines.push(line);
           line = '';
           lastTop = rect.top;
@@ -213,16 +83,12 @@ export default function Index() {
     }
 
     if (line) {
-      console.log('📝 Final line:', {
-        content: line,
-        length: line.length,
-        top: lastTop
-      });
       lines.push(line);
     }
 
-    console.log('📚 Total lines generated:', lines.length);
-
+    console.log('✅ Text splitting complete:', {
+      totalLines: lines.length,
+    });
     range.detach();
     document.body.removeChild(temp);
 
@@ -232,66 +98,252 @@ export default function Index() {
       p.className = 'overflow-hidden';
       const span = document.createElement('span');
       span.className = 'inline-block';
-      span.innerHTML = getProcessedHTML(line);
+      span.innerHTML = getProcessedHTML(line, isMobile);
       p.appendChild(span);
       ref.appendChild(p);
     });
+    console.log(' Paragraph span styling complete');
   };
+
+  const playExitAnimation = () => {
+    const exitTimeline = gsap.timeline();
+    const paragraphLines = container.current?.querySelectorAll('p > span') || [];
+    const slidingChildren = container.current?.querySelectorAll('.slidingChildren > *') || [];
+    const allH2s = [...projectRefs.current, ...mobileProjectRefs.current].filter(Boolean);
+
+    exitTimeline.to(paragraphLines, {
+      y: '-100%',
+      opacity: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power4.in',
+      stagger: 0.02,
+    }, 0);
+
+    exitTimeline.to(slidingChildren, {
+      y: '-100%',
+      opacity: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power4.in',
+      stagger: 0.015,
+    }, 0);
+
+    const nonFirstH2s = allH2s.filter(h2 => h2.textContent !== projectNames[0]);
+
+    exitTimeline.to(allH2s, {
+      x: 0,
+      y: 0,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power2.inOut',
+      stagger: ANIMATION_DURATION.short / allH2s.length,
+      onStart: function() {
+        const element = this.targets()[0];
+        if (element.classList.contains('text-left')) {
+          element.classList.remove('text-left');
+          element.classList.add('text-right');
+        }
+      }
+    }, 0.1);
+
+    exitTimeline.to(nonFirstH2s, {
+      opacity: 0.32,
+      duration: ANIMATION_DURATION.short,
+      ease: 'power2.inOut',
+    }, 0.2);
+
+    return exitTimeline;
+  };
+
+  useGSAP(() => {
+    if (hasAnimated.current) return;
+    
+    // Wait for next frame to ensure layout is stable
+    requestAnimationFrame(() => {
+      // Double RAF to ensure all style calculations are complete
+      requestAnimationFrame(() => {
+        hasAnimated.current = true;
+        const isMobile = window.innerWidth < 768;
+
+    (async () => {
+      if (isMobile && !mobileParagraphRef.current?.hasChildNodes()) {
+        await setupParagraph(mobileParagraphRef.current, originalText);
+      } else if (!isMobile && !paragraphRef.current?.hasChildNodes()) {
+        await setupParagraph(paragraphRef.current, originalText);
+      }
+          const paragraphNode = isMobile ? mobileParagraphRef.current : paragraphRef.current;
+          const h2Refs = isMobile ? mobileProjectRefs.current : projectRefs.current;
+
+          const lines = Array.from(paragraphNode.querySelectorAll('p > span'));
+          const lineStagger = ANIMATION_DURATION.long / lines.length;
+
+          // ENTRY: Paragraph lines
+          gsap.fromTo(lines,
+            { 
+              y: '100%',
+              opacity: 0
+            },
+            {
+              y: '0%',
+              opacity: 1,
+              duration: ANIMATION_DURATION.short,
+              ease: 'power4.out',
+              stagger: lineStagger,
+              delay: ANIMATION_DURATION.short,
+              onStart: () => {
+                console.log('▶️ Paragraph lines animation started');
+              },
+              onComplete: () => {
+                console.log('✅ Paragraph lines animation completed');
+              },
+            }
+          );
+
+          // ENTRY: H2 animation to placeholder
+          console.log('🎯 Starting H2 animation setup:', {
+            isMobile,
+            paragraphType: paragraphNode === mobileParagraphRef.current ? 'mobile' : 'desktop',
+            h2RefsCount: h2Refs.length
+          });
+
+          // Update the placeholder selector
+          const placeholders = Array.from(paragraphNode.querySelectorAll(
+            isMobile ? '.mobile-invisible-placeholder' : '.desktop-invisible-placeholder'
+          )).filter(span => {
+            const style = window.getComputedStyle(span);
+            const isVisible = style.display !== 'none';
+            console.log('🔍 Checking placeholder:', {
+              type: isMobile ? 'mobile' : 'desktop',
+              text: span.textContent,
+              isVisible,
+              display: style.display
+            });
+            return isVisible;
+          });
+
+          console.log('📍 Found placeholders:', {
+            count: placeholders.length,
+            texts: placeholders.map(p => p.textContent)
+          });
+
+          const h2Rects = h2Refs
+            .filter(Boolean)
+            .filter(h2 => {
+              const style = window.getComputedStyle(h2);
+              const isVisible = style.display !== 'none';
+              return isVisible;
+            })
+            .map(h2 => ({
+              element: h2,
+              rect: h2.getBoundingClientRect(),
+            }));
+
+
+          const lineHeight = parseFloat(window.getComputedStyle(paragraphNode).lineHeight);
+
+          placeholders.forEach((span, index) => {
+
+            const spanRect = span.getBoundingClientRect();
+            const h2 = h2Rects[index];
+            if (!h2) {
+              return;
+            }
+
+            const dx = spanRect.left - h2.rect.left;
+            const dy = (spanRect.top - h2.rect.top) - lineHeight;
+
+            console.log('📐 Animation calculations:', {
+              dx,
+              dy,
+              lineHeight,
+              placeholderPos: {
+                left: spanRect.left,
+                top: spanRect.top
+              },
+              h2Pos: {
+                left: h2.rect.left,
+                top: h2.rect.top
+              }
+            });
+
+            gsap.to(h2.element, {
+              x: dx,
+              y: dy,
+              duration: ANIMATION_DURATION.long,
+              ease: 'power2.inOut',
+              delay: index * 0.1,
+              onStart: function() {
+                if (h2.element.classList.contains('text-right')) {
+                  h2.element.classList.remove('text-right');
+                  h2.element.classList.add('text-left');
+                }
+                console.log(`▶️ Animation started for "${h2.element.textContent}"`, {
+                  index,
+                  delay: index * 0.1
+                });
+              },
+              onComplete: () => {
+                console.log(`✅ Animation completed for "${h2.element.textContent}"`);
+              },
+            });
+          });
+          // ENTRY: Sliding children
+          const slidingElements = container.current?.querySelectorAll('.slidingChildren');
+          const targets = [];
+          slidingElements.forEach(el => {
+            Array.from(el.children).forEach(child => {
+              child.style.display = 'inline-block';
+              targets.push(child);
+            });
+          });
+          
+
+          gsap.fromTo(targets,
+            { y: '100%' },
+            {
+              y: '0%',
+              duration: ANIMATION_DURATION.long,
+              ease: 'power4.out',
+              stagger: ANIMATION_DURATION.long / targets.length,
+              delay: ANIMATION_DURATION.short / 3,
+              onStart: () => {
+                console.log('▶️ Sliding children animation started');
+              },
+              onComplete: () => {
+                console.log(' Sliding children animation completed');
+              },
+            }
+          );
+          gsap.fromTo(slidingElements,
+            { autoAlpha: 0 },
+            {
+              autoAlpha: 1,
+            }
+          );
+
+          // EXIT timeline setup
+          if (timeline) {
+            timeline.add(playExitAnimation(), 'exit');
+          }
+
+    })();
+  });
+    });
+  }, {
+    scope: container,
+    once: true
+  });
 
   const originalText = `ALGEBRA is a website for math tutoring services. It's my first-ever website, made with WordPress. URBANEAR served as a landing page for a hackathon startup project. Created within six hours, it was also built with WordPress due to the need for a quick launch. EVENT AI is an Android app that leverages AI to generate calendar events from selected text, made with Kotlin and Jetpack Compose. The nuclear control room SIMULATOR is an interactive installation at the Energy and Technology Museum, my first workplace as an embedded systems developer. The TESLA COIL is a device showcasing electromagnetic induction, a hobby project for the "Upcycling 2023" contest. The CAR GAME is another museum installation featuring remote-controlled cars with a first-person view and a real-time control system.`;
 
 
-  const animateSlidingChildren = () => {
-    const slidingElements = document.querySelectorAll('.slidingChildren');
-    const targets = [];
 
-    slidingElements.forEach(el => {
-      const children = el.children;
-      Array.from(children).forEach(child => {
-        // Ensure transforms apply properly
-        child.style.display = 'inline-block';
-        targets.push(child);
-      });
-    });
-
-    gsap.fromTo(
-      targets,
-      { y: '100%'},
-      {
-        y: '0%',
-        duration: ANIMATION_DURATION.long,
-        ease: 'power4.out',
-        stagger: ANIMATION_DURATION.long / targets.length,
-        delay: ANIMATION_DURATION.short/3
-      }
-    );
-  };
-
-  useGSAP(() => {
-    requestAnimationFrame(() => {
-      setupParagraph(paragraphRef.current, originalText);
-      animateParagraphLines(paragraphRef.current);
-      animateH2s(paragraphRef.current, projectRefs.current);
-      animateSlidingChildren();
-  
-      setupParagraph(mobileParagraphRef.current, originalText);
-      animateParagraphLines(mobileParagraphRef.current);
-      animateH2s(mobileParagraphRef.current, mobileProjectRefs.current);
-  
-      // ✅ Add exit animation to the transition timeline
-      if (timeline) {
-        timeline.add(playExitAnimation(), 'exit');
-      }
-    });
-  }, { scope: container });
   return (
     <div ref={container} className="fixed top-0">
       <div id="fixed" className="h-[100dvh] w-[100dvw] fixed top-0 pt-[11rem] md:pt-[calc(45dvh-2.6rem)] p-[2rem]">
 
         {/* Mobile View */}
         <div className="md:hidden">
-          <div className="small-text overflow-hidden slidingChildren uppercase opacity-[0.32]">
-            <h2>Bio</h2>
+          <div className="small-text uppercase opacity-[0.32]">
+          <div className='overflow-hidden slidingChildren'><h2>Bio</h2></div>
           </div>
           <div className="small-text pt-[1rem] pb-[4rem]">
             <p className="overflow-hidden slidingChildren"><span className="inline-block">I used to work as an embedded systems developer with</span></p>
@@ -299,8 +351,8 @@ export default function Index() {
             <p className="overflow-hidden slidingChildren"><span className="inline-block">the Technical University Eindhoven. Currently learning</span></p>
             <p className="overflow-hidden slidingChildren"><span className="inline-block">web and mobile app development.</span></p>
           </div>
-          <div className="small-text uppercase overflow-hidden slidingChildren opacity-[0.32]">
-            <h2>Projects</h2>
+          <div className="small-text uppercase opacity-[0.32]">
+          <div className='overflow-hidden slidingChildren'><h2>Projects</h2></div>
           </div>
           <div className="small-text absolute bottom-[2rem] left-[2rem] overflow-hidden slidingChildren">
             <span>domas.berulis@gmail.com</span>
@@ -337,7 +389,7 @@ export default function Index() {
             <div key={index} className="h-full" />
           ))}
 
-<div className="small-text absolute bottom-[2rem] left-[2rem] overflow-hidden slidingChildren">
+          <div className="small-text absolute bottom-[2rem] left-[2rem] overflow-hidden slidingChildren">
             <span>domas.berulis@gmail.com</span>
           </div>
           <div className='small-text absolute bottom-[2rem] right-[2rem] overflow-hidden slidingChildren'>
@@ -349,8 +401,8 @@ export default function Index() {
 
 
           <div className='col-start-0 col-span-4'>
-            <div className="small-text overflow-hidden slidingChildren uppercase opacity-[0.32]">
-              <h2>Bio</h2>
+            <div className="small-text uppercase opacity-[0.32]">
+            <div className='overflow-hidden slidingChildren'><h2>Bio</h2></div>
             </div>
             <div className="small-text pt-[1rem] pb-[4rem]">
               <p className="overflow-hidden slidingChildren"><span className="inline-block">I used to work as an embedded systems developer</span></p>
@@ -363,9 +415,9 @@ export default function Index() {
 
           {/* Content spanning from column 6 to 16 */}
           <div className="col-start-6 col-span-11 relative w-full">
-          <div className="small-text uppercase opacity-[0.32] pb-[1rem]">
-            <div className='overflow-hidden slidingChildren'><h2>Projects</h2></div>
-          </div>
+            <div className="small-text uppercase opacity-[0.32] pb-[1rem]">
+              <div className='overflow-hidden slidingChildren'><h2>Projects</h2></div>
+            </div>
             {/* H2s are absolutely positioned inside this wrapper */}
             <div className="absolute top-[2.6rem] left-0 w-full whitespace-nowrap text-left">
               {projectNames.map((name, i) => (
@@ -375,7 +427,7 @@ export default function Index() {
               ))}
             </div>
 
-            
+
 
             {/* Paragraph respects the 45dvh padding from parent */}
             <div className="relative w-full">

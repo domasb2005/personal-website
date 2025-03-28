@@ -69,11 +69,21 @@ html {
     }
   }
 
-.invisible-placeholder {
+.invisible-placeholder,
+.mobile-invisible-placeholder,
+.desktop-invisible-placeholder {
     opacity: 0;
     visibility: visible;
     display: inline-block;
-  }
+}
+
+.slidingChildren{
+    visibility: hidden;
+}
+
+
+  
+
 
   .photo {
     visibility: hidden;

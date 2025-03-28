@@ -711,14 +711,14 @@ export default function Home() {
         </div>
 
         <div className="small-text pointer-events-auto flex justify-between" style={{ gridColumn: '9 / span 8' }}>
-          <span className="overflow-hidden h-[1.6rem] slidingElement">
+          <span className="overflow-hidden h-fit slidingElement">
             <p id="description" className="inline-block">
               {PROJECT_DESCRIPTIONS[descriptionIndex]}
             </p>
           </span>
           {PROJECT_LINKS[descriptionIndex] && (
             <span
-              className="overflow-hidden slidingElement h-[1.6rem]"
+              className="overflow-hidden slidingElement h-fit"
               style={{
                 visibility: PROJECT_LINKS[descriptionIndex] ? 'visible' : 'hidden'
               }}
