@@ -6,6 +6,3 @@ cmds = ["bun install"]
 
 [phases.build]
 cmds = ["bun run build"]
-
-[start]
-cmd = "bun run start"
