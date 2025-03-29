@@ -10,22 +10,25 @@ const PROJECT_FOLDERS = {
   5: 6,
 };
 
+
 export default function LoadingScreen({ onLoadComplete }) {
   const [progress, setProgress] = useState(0);
   const [assetsLoaded, setAssetsLoaded] = useState(0);
   const [mediaMap, setMediaMap] = useState(null);
   const router = useRouter();
 
+
+
   useEffect(() => {
-    console.log('🚀 Loading screen mounted');
+    
 
     const fetchMediaMap = async () => {
-      console.log('📡 Fetching media map...');
+      
       try {
         const response = await fetch('/mediaMap.json');
         if (!response.ok) throw new Error('Failed to load media map');
         const data = await response.json();
-        console.log('✅ Media map fetched successfully:', data);
+        
         return data;
       } catch (error) {
         console.error('❌ Error loading media map:', error);
@@ -80,8 +83,27 @@ export default function LoadingScreen({ onLoadComplete }) {
       });
     };
 
+    const preloadFont = (url, format) => {
+      return new Promise((resolve) => {
+        const font = new FontFace('Grotesk', `url(${url}) format('${format}')`, {
+          weight: '600',
+          style: 'normal'
+        });
+
+        font.load().then((loadedFont) => {
+          document.fonts.add(loadedFont);
+          resolve(true);
+        }).catch((error) => {
+          console.error('Font loading error:', error);
+          resolve(false);
+        });
+      });
+    };
+
     const loadAssets = async () => {
-      console.log('🎬 Starting asset loading process');
+      
+      
+      // Load media first
       const map = await fetchMediaMap();
       setMediaMap(map);
       window.__mediaMap = map;
@@ -95,7 +117,7 @@ export default function LoadingScreen({ onLoadComplete }) {
         totalAssets += images.length + videos.length;
       });
       
-      console.log(`📊 Total assets to load: ${totalAssets}`);
+      
       
       if (totalAssets === 0) {
         console.warn('⚠️ No media assets found in the map');
@@ -131,18 +153,29 @@ export default function LoadingScreen({ onLoadComplete }) {
         });
       });
 
-      console.log('⏳ Waiting for all assets to load...');
+      
       await Promise.all(promises);
       window.__assetCache = cache;
-      console.log('🎉 All assets loaded successfully!');
-      console.log('💾 Cache size:', Object.keys(cache).length);
+      
+      
+
+      // Now load fonts at the end
+      // Load fonts using FontFace API
+      
+      const fontPromises = [
+        preloadFont('/fonts/fonts-NG-SB.woff2', 'woff2'),
+        preloadFont('/fonts/fonts-NG-SB.woff', 'woff')
+      ];
+      await Promise.all(fontPromises);
+      
+
       onLoadComplete();
     };
 
     loadAssets();
     
     return () => {
-      console.log('🧹 Cleaning up loading screen');
+      
     };
   }, [onLoadComplete]);
 

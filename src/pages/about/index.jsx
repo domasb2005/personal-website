@@ -44,7 +44,7 @@ export default function Index() {
   };
 
   const setupParagraph = (ref, originalText) => {
-    console.log('🔄 Starting paragraph setup for:', ref?.className);
+    // console.log('🔄 Starting paragraph setup for:', ref?.className);
     const isMobile = window.innerWidth < 768;
     const html = getProcessedHTML(originalText, isMobile);
     const temp = document.createElement('div');
@@ -53,10 +53,10 @@ export default function Index() {
     temp.style.visibility = 'hidden';
     temp.style.whiteSpace = 'pre-wrap';
 
-    const width = getParagraphPixelWidth(isMobile) * (isMobile ? 0.65 : 0.75);
+    const width = getParagraphPixelWidth(isMobile) * (isMobile ? 0.65 : 0.7);
     temp.style.width = `${width}px`;
     document.body.appendChild(temp);
-    console.log('📐 Temporary element setup:', { width, isMobile });
+    
 
     const range = document.createRange();
     const lines = [];
@@ -86,9 +86,7 @@ export default function Index() {
       lines.push(line);
     }
 
-    console.log('✅ Text splitting complete:', {
-      totalLines: lines.length,
-    });
+    
     range.detach();
     document.body.removeChild(temp);
 
@@ -102,7 +100,7 @@ export default function Index() {
       p.appendChild(span);
       ref.appendChild(p);
     });
-    console.log(' Paragraph span styling complete');
+    // console.log(' Paragraph span styling complete');
   };
 
   const playExitAnimation = () => {
@@ -189,20 +187,20 @@ export default function Index() {
               stagger: lineStagger,
               delay: ANIMATION_DURATION.short,
               onStart: () => {
-                console.log('▶️ Paragraph lines animation started');
+                // console.log('▶️ Paragraph lines animation started');
               },
               onComplete: () => {
-                console.log('✅ Paragraph lines animation completed');
+                // console.log('✅ Paragraph lines animation completed');
               },
             }
           );
 
           // ENTRY: H2 animation to placeholder
-          console.log('🎯 Starting H2 animation setup:', {
-            isMobile,
-            paragraphType: paragraphNode === mobileParagraphRef.current ? 'mobile' : 'desktop',
-            h2RefsCount: h2Refs.length
-          });
+          // console.log('🎯 Starting H2 animation setup:', {
+          //   isMobile,
+          //   paragraphType: paragraphNode === mobileParagraphRef.current ? 'mobile' : 'desktop',
+          //   h2RefsCount: h2Refs.length
+          // });
 
           // Update the placeholder selector
           const placeholders = Array.from(paragraphNode.querySelectorAll(
@@ -210,19 +208,16 @@ export default function Index() {
           )).filter(span => {
             const style = window.getComputedStyle(span);
             const isVisible = style.display !== 'none';
-            console.log('🔍 Checking placeholder:', {
-              type: isMobile ? 'mobile' : 'desktop',
-              text: span.textContent,
-              isVisible,
-              display: style.display
-            });
+            // console.log('🔍 Checking placeholder:', {
+            //   type: isMobile ? 'mobile' : 'desktop',
+            //   text: span.textContent,
+            //   isVisible,
+            //   display: style.display
+            // });
             return isVisible;
           });
 
-          console.log('📍 Found placeholders:', {
-            count: placeholders.length,
-            texts: placeholders.map(p => p.textContent)
-          });
+
 
           const h2Rects = h2Refs
             .filter(Boolean)
@@ -250,19 +245,19 @@ export default function Index() {
             const dx = spanRect.left - h2.rect.left;
             const dy = (spanRect.top - h2.rect.top) - lineHeight;
 
-            console.log('📐 Animation calculations:', {
-              dx,
-              dy,
-              lineHeight,
-              placeholderPos: {
-                left: spanRect.left,
-                top: spanRect.top
-              },
-              h2Pos: {
-                left: h2.rect.left,
-                top: h2.rect.top
-              }
-            });
+            // console.log('📐 Animation calculations:', {
+            //   dx,
+            //   dy,
+            //   lineHeight,
+            //   placeholderPos: {
+            //     left: spanRect.left,
+            //     top: spanRect.top
+            //   },
+            //   h2Pos: {
+            //     left: h2.rect.left,
+            //     top: h2.rect.top
+            //   }
+            // });
 
             gsap.to(h2.element, {
               x: dx,
@@ -275,13 +270,13 @@ export default function Index() {
                   h2.element.classList.remove('text-right');
                   h2.element.classList.add('text-left');
                 }
-                console.log(`▶️ Animation started for "${h2.element.textContent}"`, {
-                  index,
-                  delay: index * 0.1
-                });
+                // console.log(`▶️ Animation started for "${h2.element.textContent}"`, {
+                //   index,
+                //   delay: index * 0.1
+                // });
               },
               onComplete: () => {
-                console.log(`✅ Animation completed for "${h2.element.textContent}"`);
+                // console.log(`✅ Animation completed for "${h2.element.textContent}"`);
               },
             });
           });
@@ -305,10 +300,10 @@ export default function Index() {
               stagger: ANIMATION_DURATION.long / targets.length,
               delay: ANIMATION_DURATION.short / 3,
               onStart: () => {
-                console.log('▶️ Sliding children animation started');
+                // console.log('▶️ Sliding children animation started');
               },
               onComplete: () => {
-                console.log(' Sliding children animation completed');
+                // console.log(' Sliding children animation completed');
               },
             }
           );

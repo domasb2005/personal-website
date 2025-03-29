@@ -184,20 +184,8 @@ export default function Home() {
   const scrollToProject = (index) => {
     const isMobile = window.innerWidth < 768;
     const el = isMobile ? mobileSectionRefs.current[index] : sectionRefs.current[index];
-    console.log('🎯 Scroll triggered for index:', index, 'isMobile:', isMobile);
-    console.log('📍 Target element:', el);
-    console.log('🛹 Lenis instance:', lenisRef.current);
 
-    // Add new debug logs for element state
-    console.log('🔍 Element Details:', {
-      display: window.getComputedStyle(el).display,
-      visibility: window.getComputedStyle(el).visibility,
-      height: window.getComputedStyle(el).height,
-      offsetParent: el.offsetParent,
-      offsetTop: el.offsetTop,
-      offsetHeight: el.offsetHeight,
-      classList: Array.from(el.classList)
-    });
+
 
     if (el && lenisRef.current) {
       const rect = el.getBoundingClientRect();
@@ -211,10 +199,9 @@ export default function Home() {
 
       lenisRef.current.scrollTo(scrollY, {
         duration: duration,
-        onComplete: () => console.log('✅ Scroll animation completed')
       });
     } else {
-      console.error('❌ Scroll failed:', {
+      console.error('Scroll failed:', {
         hasElement: !!el,
         hasLenis: !!lenisRef.current,
         refs: sectionRefs.current
@@ -269,7 +256,7 @@ export default function Home() {
         .then(data => {
           window.__mediaMap = data;
           setMediaMapLoaded(true);
-          console.log('📦 Media map loaded:', data);
+          
         })
         .catch(error => {
           console.error('❌ Error loading media map:', error);
@@ -367,7 +354,7 @@ export default function Home() {
           if (raisedNumbers.has(index)) return;
           
           // Rest of your existing animation code for scrolling down
-          console.log(`🎬 Attempting animation UP for element ${index}`);
+          
           if (numholdElement) {
             // Mark current index as raised
             setRaisedNumbers(prev => new Set([...prev, index]));
@@ -409,8 +396,6 @@ export default function Home() {
               duration: 0.4,
               ease: 'power2.out',
               stagger: 0.1,
-              onStart: () => console.log(`✨ Started number animation for ${index}`),
-              onComplete: () => console.log(`✅ Completed number animation for ${index}`),
             });
 
             // gsap.to(numholdElement, {
@@ -503,14 +488,14 @@ export default function Home() {
 
 
   useGSAP(() => {
-    console.log('🎭 useGSAP triggered', {
-      mediaMapLoaded,
-      timelineExists: !!timeline,
-      containerExists: !!container.current
-    });
+    // console.log(' useGSAP triggered', {
+    //   mediaMapLoaded,
+    //   timelineExists: !!timeline,
+    //   containerExists: !!container.current
+    // });
 
     if (!mediaMapLoaded) {
-      console.log('⏳ Media map not loaded yet, skipping animation');
+      // console.log(' Media map not loaded yet, skipping animation');
       return;
     }
 
@@ -546,8 +531,6 @@ export default function Home() {
         return;
       }
 
-      // Entry animation – slide in from below
-      console.log('🎬 Starting entry animation');
       const entryTimeline = gsap.timeline();
 
       entryTimeline
