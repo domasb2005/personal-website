@@ -30,8 +30,8 @@ const PROJECT_DESCRIPTIONS = [
 ];
 
 const PROJECT_LINKS = [
-  "https://example.com/algebra",
-  "https://example.com/urbanear",
+  "https://algebra.domas.be",
+  "https://urbanear.domas.be",
   "https://github.com/domasb2005/eventAI",
   null,
   null,
